@@ -1,0 +1,20 @@
+{
+  "name": "gerbera",
+  "version": "0.0.0",
+  "description": "Shaders in JavaScript",
+  "scripts": {
+    "build": "coffee -cj yasl.js src",
+    "test": "jasmine-node --coffee --color --autotest ."
+  },
+  "repository": "http://github.com/xl1/gerbera.git",
+  "author": "xl1",
+  "license": "MIT",
+  "dependencies": {
+    "esprima": "~1.0.4",
+    "glsl-deparser": "0.0.2"
+  },
+  "devDependencies": {
+    "glsl-parser": "0.0.5",
+    "glsl-tokenizer": "0.0.8"
+  }
+}
