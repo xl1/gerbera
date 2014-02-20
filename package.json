@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Shaders in JavaScript",
   "scripts": {
-    "build": "coffee -cj yasl.js src",
+    "build": "coffee -c src",
     "test": "jasmine-node --coffee --color --autotest ."
   },
   "repository": "http://github.com/xl1/gerbera.git",
