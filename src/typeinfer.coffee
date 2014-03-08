@@ -23,7 +23,9 @@ class Scope
 module.exports =
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
-      return f.call @, node, scope
+      node.scope = scope
+      node.glslType = f.call @, node, scope
+      return node
     else
       throw new Error "Unsupported Node Type: #{node.type}"
 
@@ -31,13 +33,16 @@ module.exports =
     node.scope = new Scope
     for child in node.body
       @infer child, node.scope
-    node
+    return
 
   inferAssignmentExpression: ({ operator, left, right }, scope) ->
     type =
       switch operator
         when '=', '+=', '-='
-          typeop.unite @infer(left, scope), @infer(right, scope)
+          typeop.unite(
+            @infer(left, scope).glslType
+            @infer(right, scope).glslType
+          )
         else
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
@@ -65,16 +70,16 @@ module.exports =
     return
 
   inferVariableDeclarator: ({ id, init }, scope) ->
-    scope.set id.name, init and @infer(init, scope)
+    scope.set id.name, init and @infer(init, scope).glslType
 
   inferCallExpression: (node, scope) ->
-    calleeType = @infer node.callee, scope
-    argumentsTypes = @infer(child, scope) for child in node.arguments
+    calleeType = @infer(node.callee, scope).glslType
+    argumentsTypes = @infer(child, scope).glslType for child in node.arguments
     if typeop.isUnresolved calleeType
       calleeScope = calleeType.node.scope
       for arg, i in calleeType.node.params
         calleeScope.set arg.name, argumentsTypes[i]
-      calleeType = @infer calleeType.node.body, calleeScope
+      calleeType = @infer(calleeType.node.body, calleeScope).glslType
     else
       calleeType = unite calleeType,
         typeop.create 'function', arguments: argumentsTypes
