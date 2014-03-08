@@ -1,6 +1,7 @@
 through = require 'through'
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
+typeop = require './typeoperation'
 
 
 build = ({ type, data, children }) ->
@@ -64,3 +65,22 @@ transformers =
   transformExpressionStatement: ({ expression }) -> build
     type: 'stmt'
     children: [@transform expression]
+
+  transformVariableDeclaration: ({ declarations, kind }) -> build
+    type: 'stmt'
+    children: [build
+      type: 'decl'
+      children: [build
+        type: 'keyword'
+        data: declarations[0].glslType.name
+      ].concat declarations.map (x) => @transform x
+    ]
+
+  transformVariableDeclarator: ({ id, init }) -> build
+    type: 'decllist'
+    children: [
+      @transform id
+      build
+        type: 'expr'
+        children: [@transform init]
+    ]
