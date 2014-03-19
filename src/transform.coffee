@@ -58,6 +58,8 @@ transformers =
       else 'ident'
     data: name
 
+  transformType: (type) -> @transformIdentifier type
+
   transformBlockStatement: ({ body }) -> build
     type: 'stmtlist'
     children: body.map (x) => @transform x
@@ -70,9 +72,8 @@ transformers =
     type: 'stmt'
     children: [build
       type: 'decl'
-      children: [build
-        type: 'keyword'
-        data: declarations[0].glslType.name
+      children: [
+        @transformType declarations[0].glslType
       ].concat declarations.map (x) => @transform x
     ]
 
