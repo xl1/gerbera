@@ -5,13 +5,16 @@ inferrer = require '../src/typeinfer'
 transform = require '../src/transform'
 
 test = (source, expected) ->
+  buffer = ''
   result = ''
   runs ->
     s = new Stream
     s.pipe transform()
       .pipe deparser false
-      .on 'data', (r) -> result = r
+      .on 'data', (r) -> buffer += r
+      .on 'close', -> result = buffer
     s.emit 'data', inferrer.infer esprima.parse source
+    s.emit 'close'
   waitsFor 1000, -> result
   runs ->
     expect(result).toBe expected
