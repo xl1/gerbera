@@ -18,6 +18,8 @@ class Scope
     if type = @parent?.get symbol
       return typeop.inout type
     throw new Error "Undeclared symbol #{symbol}"
+  getLocal: (symbol) ->
+    @symTable[symbol]
 
 
 module.exports =
@@ -74,15 +76,26 @@ module.exports =
 
   inferCallExpression: (node, scope) ->
     calleeType = @infer(node.callee, scope).glslType
-    argumentsTypes = @infer(child, scope).glslType for child in node.arguments
+    calleeName = calleeType.node.id.name
+    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
     if typeop.isUnresolved calleeType
       calleeScope = calleeType.node.scope
       for arg, i in calleeType.node.params
         calleeScope.set arg.name, argumentsTypes[i]
-      calleeType = @infer(calleeType.node.body, calleeScope).glslType
+        @infer arg, calleeScope
+      @infer calleeType.node.body, calleeScope
+      calleeType = typeop.unite(
+        calleeType
+        typeop.create 'function',
+          arguments: argumentsTypes
+          returns: calleeScope.getLocal('#return') or typeop.create 'void'
+      )
     else
-      calleeType = unite calleeType,
+      calleeType = typeop.unite(
+        calleeType
         typeop.create 'function', arguments: argumentsTypes
+      )
+    scope.set calleeName, calleeType
     typeop.returns calleeType
 
   inferFunctionDeclaration: (node, scope) ->
@@ -93,3 +106,7 @@ module.exports =
   inferFunctionExpression: (node, scope) ->
     node.scope = new Scope scope
     scope.set node.id?.name, typeop.create 'unresolvedFunction', node: node
+
+  inferReturnStatement: ({ arguement }, scope) ->
+    scope.set '#return', @infer(arguement, scope).glslType
+    return

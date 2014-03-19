@@ -18,11 +18,14 @@ build = ({ type, data, children }) ->
 
 module.exports = ->
   through (program) ->
+    if program.parent
+      return
     root = build
       type: 'stmtlist'
       children: program.body.map (x) -> transformers.transform x
     for child in root.children
       @queue child
+    return
 
 
 transformers =
@@ -36,16 +39,20 @@ transformers =
     type: 'stmtlist'
     children: body.map (x) => @transform x
 
-  transformAssignmentExpression: ({ operator, left, right }) -> build
-    type: 'expr'
-    children: [build
-      type: 'assign'
-      data: operator
-      children: [
-        @transform left
-        @transform right
-      ]
-    ]
+  transformAssignmentExpression: ({ operator, left, right }) ->
+    if right.type is 'FunctionExpression'
+      throw new Error 'Not implemented'
+    else
+      build
+        type: 'expr'
+        children: [build
+          type: 'assign'
+          data: operator
+          children: [
+            @transform left
+            @transform right
+          ]
+        ]
 
   transformLiteral: ({ value }) -> build
     type: 'literal'
@@ -84,4 +91,33 @@ transformers =
       build
         type: 'expr'
         children: [@transform init]
+    ]
+
+  transformCallExpression: (node) -> build
+    type: 'call'
+    children: [
+      @transform node.callee
+    ].concat node.arguments.map (x) => @transform x
+
+  transformFunctionDeclaration: (node) -> build
+    type: 'decl'
+    children: [
+      @transformType typeop.returns(node.scope.parent.get node.id.name)
+      build
+        type: 'function'
+        children: [
+          @transform node.id
+          build
+            type: 'functionargs'
+            children: node.params.map (x) =>
+              build
+                type: 'decl'
+                children: [
+                  @transformType x.glslType
+                  build
+                    type: 'decllist'
+                    children: [@transform x]
+                ]
+          @transform node.body
+        ]
     ]

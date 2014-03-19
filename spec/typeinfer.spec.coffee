@@ -16,3 +16,9 @@ describe 'typeinfer', ->
       expect ->
         inferrer.infer ast
       .toThrow()
+
+    it 'should throw if a type contradiction is found', ->
+      ast = esprima.parse 'a = true; a = 1;'
+      expect ->
+        inferrer.infer ast
+      .toThrow()

@@ -22,3 +22,11 @@ test = (source, expected) ->
 describe 'transform', ->
   it 'test for assignment', ->
     test 'var a = 1;', 'float a=1;'
+
+  it 'should convert function statement', ->
+    test '
+      function func(i){}
+      func(1);
+    ', '
+      void func(float i){}func(1)
+    '
