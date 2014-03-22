@@ -6,7 +6,7 @@ typeop = require './typeoperation'
 
 build = ({ type, data, children }) ->
   result = { type }
-  if data
+  if data?
     result.data = data
     result.token = { data }
   if children
