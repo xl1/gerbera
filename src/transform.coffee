@@ -124,3 +124,6 @@ transformers =
           ]
       ]
     ]
+
+  transformFunctionExpression: (node) ->
+    @transformFunctionDeclaration node
