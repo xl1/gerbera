@@ -75,14 +75,20 @@ transformers =
     type: 'stmt'
     children: [@transform expression]
 
-  transformVariableDeclaration: ({ declarations, kind }) -> build
-    type: 'stmt'
-    children: [build
-      type: 'decl'
-      children: [
-        @transformType declarations[0].glslType
-      ].concat declarations.map (x) => @transform x
-    ]
+  transformVariableDeclaration: ({ declarations, kind }) ->
+    type = declarations[0].glslType
+    if typeop.isFunction type
+      funcNode = declarations[0].init
+      funcNode.id = declarations[0].id
+      return @transform funcNode
+    build
+      type: 'stmt'
+      children: [build
+        type: 'decl'
+        children: [
+          @transformType declarations[0].glslType
+        ].concat declarations.map (x) => @transform x
+      ]
 
   transformVariableDeclarator: ({ id, init }) -> build
     type: 'decllist'
