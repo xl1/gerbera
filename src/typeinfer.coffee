@@ -80,7 +80,6 @@ module.exports =
 
   inferCallExpression: (node, scope) ->
     calleeType = @infer(node.callee, scope).glslType
-    calleeName = calleeType.node.id.name
     argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
     if typeop.isUnresolved calleeType
       calleeScope = calleeType.node.scope
@@ -99,7 +98,10 @@ module.exports =
         calleeType
         typeop.create 'function', arguments: argumentsTypes
       )
-    scope.set calleeName, calleeType
+    if node.callee.name
+      scope.set node.callee.name, calleeType
+    else
+      scope.set calleeType.node.id.name, calleeType
     typeop.returns calleeType
 
   inferFunctionDeclaration: (node, scope) ->
