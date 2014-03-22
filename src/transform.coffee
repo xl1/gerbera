@@ -100,24 +100,27 @@ transformers =
     ].concat node.arguments.map (x) => @transform x
 
   transformFunctionDeclaration: (node) -> build
-    type: 'decl'
+    type: 'stmt'
     children: [
-      @transformType typeop.returns(node.scope.parent.get node.id.name)
-      build
-        type: 'function'
-        children: [
-          @transform node.id
-          build
-            type: 'functionargs'
-            children: node.params.map (x) =>
-              build
-                type: 'decl'
-                children: [
-                  @transformType x.glslType
-                  build
-                    type: 'decllist'
-                    children: [@transform x]
-                ]
-          @transform node.body
-        ]
+      type: 'decl'
+      children: [
+        @transformType typeop.returns(node.scope.parent.get node.id.name)
+        build
+          type: 'function'
+          children: [
+            @transform node.id
+            build
+              type: 'functionargs'
+              children: node.params.map (x) =>
+                build
+                  type: 'decl'
+                  children: [
+                    @transformType x.glslType
+                    build
+                      type: 'decllist'
+                      children: [@transform x]
+                  ]
+            @transform node.body
+          ]
+      ]
     ]
