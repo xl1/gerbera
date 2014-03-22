@@ -109,7 +109,14 @@ module.exports =
 
   inferFunctionExpression: (node, scope) ->
     node.scope = new Scope scope
-    scope.set node.id?.name, typeop.create 'unresolvedFunction', node: node
+    if node.id
+      functionName = node.id.name
+    else
+      functionName = @createAnonymousFunctionName()
+      node.id =
+        type: 'Identifier'
+        name: functionName
+    scope.set functionName, typeop.create 'unresolvedFunction', node: node
 
   inferReturnStatement: ({ arguement }, scope) ->
     scope.set '#return', @infer(arguement, scope).glslType
