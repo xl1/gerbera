@@ -15,6 +15,7 @@ module.exports =
   inout: (type) -> @create type.name, inout: true
   isInout: (type) -> type.inout
   isUnresolved: (type) -> type.name is 'unresolvedFunction'
+  isFunction: (type) -> (type.name is 'function') or @isUnresolved type
   node: (type) -> type.node
   returns: (type) -> type.returns
   arguments: (type) -> type.arguments
