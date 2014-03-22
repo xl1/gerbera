@@ -30,3 +30,11 @@ describe 'transform', ->
     ', '
       void func(float i){}func(1)
     '
+
+  it 'should convert function expression', ->
+    test '
+      var func = function(x, y){};
+      func(0, 1);
+    ', '
+      void func(float x,float y){}func(0,1)
+    '
