@@ -29,6 +29,8 @@ module.exports =
     type.arguments
 
   uniteFunction: (type1, type2) ->
+    if @isUnresolved(type1) and @isUnresolved(type2)
+      return type1
     args1 = @arguments type1
     args2 = @arguments type2
     if args1?.length isnt args2?.length
@@ -36,6 +38,7 @@ module.exports =
     @create 'function',
       arguments: (@unite args1[i], args2[i] for i in [0...args1.length] by 1)
       returns: @unite @returns(type1), @returns(type2)
+      node: type1.node or type2.node
 
   unite: (type1, type2) ->
     if @isUndef type1
