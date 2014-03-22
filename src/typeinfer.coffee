@@ -23,6 +23,10 @@ class Scope
 
 
 module.exports =
+  createAnonymousFunctionName: do ->
+    i = 0
+    -> "anonymousFuncion#{i++}"
+
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
       node.scope = scope
