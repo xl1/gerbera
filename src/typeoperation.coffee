@@ -17,8 +17,16 @@ module.exports =
   isUnresolved: (type) -> type.name is 'unresolvedFunction'
   isFunction: (type) -> (type.name is 'function') or @isUnresolved type
   node: (type) -> type.node
-  returns: (type) -> type.returns
-  arguments: (type) -> type.arguments
+
+  returns: (type) ->
+    if type.name isnt 'function'
+      throw new Error "Type #{type?.name} is not function"
+    type.returns
+
+  arguments: (type) ->
+    if type.name isnt 'function'
+      throw new Error "Type #{type?.name} is not function"
+    type.arguments
 
   uniteFunction: (type1, type2) ->
     args1 = @arguments type1
