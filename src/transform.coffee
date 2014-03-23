@@ -114,7 +114,7 @@ transformers =
 
   transformFunctionDeclaration: (node) -> build
     type: 'stmt'
-    children: [
+    children: [build
       type: 'decl'
       children: [
         build type: 'placeholder'
