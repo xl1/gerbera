@@ -45,3 +45,6 @@ describe 'transform', ->
     ', '
       const float a=1;
     '
+
+  it 'should convert NewExpression to constructor call', ->
+    test 'var a = new vec3(0);', 'vec3 a=vec3(0);'

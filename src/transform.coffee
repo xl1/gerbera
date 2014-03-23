@@ -151,3 +151,6 @@ transformers =
 
   transformFunctionExpression: (node) ->
     @transformFunctionDeclaration node
+
+  transformNewExpression: (node) ->
+    @transformCallExpression node

@@ -123,3 +123,10 @@ module.exports =
   inferReturnStatement: ({ arguement }, scope) ->
     scope.set '#return', @infer(arguement, scope).glslType
     return
+
+  inferNewExpression: (node, scope) ->
+    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
+    calleeName = node.callee.name
+    if calleeName in keywords
+      return typeop.create calleeName
+    throw new Error 'Not implemented'
