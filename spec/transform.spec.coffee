@@ -31,6 +31,14 @@ describe 'transform', ->
       void func(float i){}func(1)
     '
 
+  it 'should infer return value type of function', ->
+    test '
+      function func2(i){ return i; }
+      func2(2);
+    ', '
+      float func2(float i){return i;}func2(2)
+    '
+
   it 'should convert function expression', ->
     test '
       var func = function(x, y){};

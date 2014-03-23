@@ -152,5 +152,12 @@ transformers =
   transformFunctionExpression: (node) ->
     @transformFunctionDeclaration node
 
+  transformReturnStatement: ({ argument }) -> build
+    type: 'stmt'
+    children: [build
+      type: 'return'
+      children: [@transform argument]
+    ]
+
   transformNewExpression: (node) ->
     @transformCallExpression node
