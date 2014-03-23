@@ -120,8 +120,8 @@ module.exports =
         name: functionName
     scope.set functionName, typeop.create 'unresolvedFunction', node: node
 
-  inferReturnStatement: ({ arguement }, scope) ->
-    scope.set '#return', @infer(arguement, scope).glslType
+  inferReturnStatement: ({ argument }, scope) ->
+    scope.set '#return', @infer(argument, scope).glslType
     return
 
   inferNewExpression: (node, scope) ->
