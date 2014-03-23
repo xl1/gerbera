@@ -86,6 +86,10 @@ transformers =
       children: [build
         type: 'decl'
         children: [
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
           @transformType declarations[0].glslType
         ].concat declarations.map (x) => @transform x
       ]
@@ -110,6 +114,10 @@ transformers =
     children: [
       type: 'decl'
       children: [
+        build type: 'placeholder'
+        build type: 'placeholder'
+        build type: 'placeholder'
+        build type: 'placeholder'
         @transformType typeop.returns(node.scope.parent.get node.id.name)
         build
           type: 'function'
@@ -121,6 +129,13 @@ transformers =
                 build
                   type: 'decl'
                   children: [
+                    build type: 'placeholder'
+                    build type: 'placeholder'
+                    if typeop.isInout(x.glslType)
+                      build type: 'keyword', data: 'inout'
+                    else
+                      build type: 'placeholder'
+                    build type: 'placeholder'
                     @transformType x.glslType
                     build
                       type: 'decllist'
