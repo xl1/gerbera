@@ -38,3 +38,10 @@ describe 'transform', ->
     ', '
       void func(float x,float y){}func(0,1)
     '
+
+  it 'should convert const declaration', ->
+    test '
+      const a = 1;
+    ', '
+      const float a=1;
+    '

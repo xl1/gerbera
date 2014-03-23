@@ -87,7 +87,10 @@ transformers =
         type: 'decl'
         children: [
           build type: 'placeholder'
-          build type: 'placeholder'
+          if kind is 'var'
+            build type: 'placeholder'
+          else
+            build type: 'keyword', data: kind
           build type: 'placeholder'
           build type: 'placeholder'
           @transformType declarations[0].glslType
