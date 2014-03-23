@@ -43,7 +43,8 @@ transformers =
 
   transformAssignmentExpression: ({ operator, left, right }) ->
     if right.type is 'FunctionExpression'
-      throw new Error 'Not implemented'
+      right.id = left
+      @transform right
     else
       [
         build type: 'expr', children: [
@@ -82,6 +83,7 @@ transformers =
     for decl in declarations
       type = scope.get decl.id.name
       if typeop.isFunction type
+        continue unless decl.init
         decl.init.id = decl.id
         @transform(decl.init)[0]
       else

@@ -15,7 +15,7 @@ test = (source, expected) ->
       .on 'close', -> result = buffer
     s.emit 'data', inferrer.infer esprima.parse source
     s.emit 'close'
-  waitsFor 1000, -> result
+  waitsFor 500, -> result
   runs ->
     expect(result).toBe expected
 
@@ -45,6 +45,16 @@ describe 'transform', ->
       func(0, 1);
     ', '
       void func(float x,float y){}func(0,1)
+    '
+
+  it 'should convert function expression assignment', ->
+    test '
+      var func;
+      func = function(x){};
+      func(0);
+      func(1);
+    ', '
+      void func(float x){}func(0)func(1)
     '
 
   it 'should convert const declaration', ->
