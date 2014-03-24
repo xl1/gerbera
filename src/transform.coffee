@@ -79,27 +79,26 @@ transformers =
   ]
 
   transformVariableDeclaration: ({ declarations, kind }) ->
-    type = declarations[0].glslType
-    if typeop.isFunction type
-      funcNode = declarations[0].init
-      funcNode.id = declarations[0].id
-      return @transform funcNode
-    [
-      build type: 'stmt', children: [
-        build type: 'decl', children: [
-          build type: 'placeholder'
-          if kind is 'var'
+    for decl in declarations
+      type = decl.glslType
+      if typeop.isFunction type
+        decl.init.id = decl.id
+        @transform(decl.init)[0]
+      else
+        build type: 'stmt', children: [
+          build type: 'decl', children: [
             build type: 'placeholder'
-          else
-            build type: 'keyword', data: kind
-          build type: 'placeholder'
-          build type: 'placeholder'
-        ].concat(
-          @transformType type
-          flatmap declarations, (x) => @transform x
-        )
-      ]
-    ]
+            if kind is 'const'
+              build type: 'keyword', data: 'const'
+            else
+              build type: 'placeholder'
+            build type: 'placeholder'
+            build type: 'placeholder'
+          ].concat(
+            @transformType type
+            @transform decl
+          )
+        ]
 
   transformVariableDeclarator: ({ id, init }) -> [
     build type: 'decllist', children: @transform(id).concat [
