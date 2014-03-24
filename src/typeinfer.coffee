@@ -81,27 +81,30 @@ module.exports =
   inferCallExpression: (node, scope) ->
     calleeType = @infer(node.callee, scope).glslType
     argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
-    if typeop.isUnresolved calleeType
-      calleeScope = calleeType.node.scope
-      for arg, i in calleeType.node.params
-        calleeScope.set arg.name, argumentsTypes[i]
-        @infer arg, calleeScope
-      @infer calleeType.node.body, calleeScope
-      calleeType = typeop.unite(
-        calleeType
-        typeop.create 'function',
-          arguments: argumentsTypes
-          returns: calleeScope.getLocal('#return') or typeop.create 'void'
-      )
+    if node.callee.type is 'MemberExpression'
+      calleeType.arguments = argumentsTypes
     else
-      calleeType = typeop.unite(
-        calleeType
-        typeop.create 'function', arguments: argumentsTypes
-      )
-    if node.callee.name
-      scope.set node.callee.name, calleeType
-    else
-      scope.set calleeType.node.id.name, calleeType
+      if typeop.isUnresolved calleeType
+        calleeScope = calleeType.node.scope
+        for arg, i in calleeType.node.params
+          calleeScope.set arg.name, argumentsTypes[i]
+          @infer arg, calleeScope
+        @infer calleeType.node.body, calleeScope
+        calleeType = typeop.unite(
+          calleeType
+          typeop.create 'function',
+            arguments: argumentsTypes
+            returns: calleeScope.getLocal('#return') or typeop.create 'void'
+        )
+      else
+        calleeType = typeop.unite(
+          calleeType
+          typeop.create 'function', arguments: argumentsTypes
+        )
+      if node.callee.name
+        scope.set node.callee.name, calleeType
+      else
+        scope.set calleeType.node.id.name, calleeType
     typeop.returns calleeType
 
   inferFunctionDeclaration: (node, scope) ->
@@ -130,3 +133,8 @@ module.exports =
     if calleeName in keywords
       return typeop.create calleeName
     throw new Error 'Not implemented'
+
+  inferMemberExpression: ({ object, property, computed }, scope) ->
+    if computed
+      throw new Error 'Not implemented'
+    typeop.create 'function', returns: typeop.create object.name

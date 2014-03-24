@@ -69,3 +69,10 @@ describe 'transform', ->
 
   it 'should convert multiple declarations', ->
     test 'var x = 0, y = new vec3(1);', 'float x=0;vec3 y=vec3(1);'
+
+  it 'should convert builtin methods', ->
+    test '
+      var x = vec3.pow(new vec3(1, 2, 3), 4);
+    ', '
+      vec3 x=pow(vec3(1,2,3),4);
+    '

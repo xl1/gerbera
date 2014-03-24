@@ -151,3 +151,8 @@ transformers =
 
   transformNewExpression: (node) ->
     @transformCallExpression node
+
+  transformMemberExpression: ({ object, property, computed }) ->
+    if computed
+      throw new Error 'Not implemented'
+    @transform property
