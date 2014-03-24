@@ -78,9 +78,9 @@ transformers =
     build type: 'stmt', children: @transform expression
   ]
 
-  transformVariableDeclaration: ({ declarations, kind }) ->
+  transformVariableDeclaration: ({ declarations, kind, scope }) ->
     for decl in declarations
-      type = decl.glslType
+      type = scope.get decl.id.name
       if typeop.isFunction type
         decl.init.id = decl.id
         @transform(decl.init)[0]
