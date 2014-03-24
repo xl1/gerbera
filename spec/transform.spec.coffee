@@ -20,7 +20,7 @@ test = (source, expected) ->
     expect(result).toBe expected
 
 describe 'transform', ->
-  it 'test for assignment', ->
+  it 'should convert variable declaration', ->
     test 'var a = 1;', 'float a=1;'
 
   it 'should convert function statement', ->
@@ -56,3 +56,6 @@ describe 'transform', ->
 
   it 'should convert NewExpression to constructor call', ->
     test 'var a = new vec3(0);', 'vec3 a=vec3(0);'
+
+  it 'should convert multiple declarations', ->
+    test 'var x = 0, y = new vec3(1);', 'float x=0;vec3 y=vec3(1);'
