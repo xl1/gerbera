@@ -83,6 +83,8 @@ transformers =
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
     for decl in declarations
       type = scope.get decl.id.name
+      if typeop.isUndef type
+        continue
       if typeop.isFunction type
         continue unless decl.init
         decl.init.id = decl.id
@@ -103,11 +105,14 @@ transformers =
           )
         ]
 
-  transformVariableDeclarator: ({ id, init }) -> [
-    build type: 'decllist', children: @transform(id).concat [
-      build type: 'expr', children: @transform init
+  transformVariableDeclarator: ({ id, init }) ->
+    tid = @transform id
+    [
+      build type: 'decllist', children: if init
+        tid.concat [build type: 'expr', children: @transform init]
+      else
+        tid
     ]
-  ]
 
   transformCallExpression: (node) -> [
     if node.callee.type is 'MemberExpression' and
