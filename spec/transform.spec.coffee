@@ -94,3 +94,12 @@ describe 'transform', ->
       float a;vec3 b;\
       vec3 x=(a=0)*(b=vec3(1));
     '
+
+  it 'should ignore declarations of builtins (CoffeeScript support)', ->
+    test '
+      var a, gl_Position, b, gl_PointSize;
+      b = 1;
+      gl_PointSize = b;
+    ', '
+      float b;b=1;gl_PointSize=b;
+    '

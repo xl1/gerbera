@@ -82,6 +82,8 @@ transformers =
 
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
     for decl in declarations
+      if decl.id.name in builtins
+        continue
       type = scope.get decl.id.name
       if typeop.isUndef type
         continue
