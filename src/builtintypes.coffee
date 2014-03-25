@@ -1,20 +1,30 @@
 to = require './typeoperation'
 
-vec4 = to.create 'vec4'
-func = to.create 'function'
+array = (x) -> to.create 'array', of: x
+struct = (x) -> to.create 'struct', of: x
+ctor = (args) -> to.create 'constructor', arguments: args
 
-module.exports =
+bool = to.create 'bool'
+int = to.create 'int'
+float = to.create 'float'
+vec2 = to.create 'vec2'
+vec3 = to.create 'vec3'
+vec4 = to.create 'vec4'
+mat3 = to.create 'mat3'
+mat4 = to.create 'mat4'
+
+builtintypes =
   gl_Position: vec4
-  gl_PointSize: vec4
+  gl_PointSize: float
   gl_ClipVertex: vec4
   gl_FragCoord: vec4
-  gl_FrontFacing: vec4
+  gl_FrontFacing: bool
   gl_FragColor: vec4
-  gl_FragData: vec4
-  gl_FragDepth: vec4
+  gl_FragData: array vec4
+  gl_FragDepth: float
   gl_Color: vec4
   gl_SecondaryColor: vec4
-  gl_Normal: vec4
+  gl_Normal: vec3
   gl_Vertex: vec4
   gl_MultiTexCoord0: vec4
   gl_MultiTexCoord1: vec4
@@ -24,125 +34,82 @@ module.exports =
   gl_MultiTexCoord5: vec4
   gl_MultiTexCoord6: vec4
   gl_MultiTexCoord7: vec4
-  gl_FogCoord: vec4
-  gl_MaxLights: vec4
-  gl_MaxClipPlanes: vec4
-  gl_MaxTextureUnits: vec4
-  gl_MaxTextureCoords: vec4
-  gl_MaxVertexAttribs: vec4
-  gl_MaxVertexUniformComponents: vec4
-  gl_MaxVaryingFloats: vec4
-  gl_MaxVertexTextureImageUnits: vec4
-  gl_MaxCombinedTextureImageUnits: vec4
-  gl_MaxTextureImageUnits: vec4
-  gl_MaxFragmentUniformComponents: vec4
-  gl_MaxDrawBuffers: vec4
-  gl_ModelViewMatrix: vec4
-  gl_ProjectionMatrix: vec4
-  gl_ModelViewProjectionMatrix: vec4
-  gl_TextureMatrix: vec4
-  gl_NormalMatrix: vec4
-  gl_ModelViewMatrixInverse: vec4
-  gl_ProjectionMatrixInverse: vec4
-  gl_ModelViewProjectionMatrixInverse: vec4
-  gl_TextureMatrixInverse: vec4
-  gl_ModelViewMatrixTranspose: vec4
-  gl_ProjectionMatrixTranspose: vec4
-  gl_ModelViewProjectionMatrixTranspose: vec4
-  gl_TextureMatrixTranspose: vec4
-  gl_ModelViewMatrixInverseTranspose: vec4
-  gl_ProjectionMatrixInverseTranspose: vec4
-  gl_ModelViewProjectionMatrixInverseTranspose: vec4
-  gl_TextureMatrixInverseTranspose: vec4
-  gl_NormalScale: vec4
-  gl_DepthRangeParameters: vec4
-  gl_DepthRange: vec4
-  gl_ClipPlane: vec4
-  gl_PointParameters: vec4
-  gl_Point: vec4
-  gl_MaterialParameters: vec4
-  gl_FrontMaterial: vec4
-  gl_BackMaterial: vec4
-  gl_LightSourceParameters: vec4
-  gl_LightSource: vec4
-  gl_LightModelParameters: vec4
-  gl_LightModel: vec4
-  gl_LightModelProducts: vec4
-  gl_FrontLightModelProduct: vec4
-  gl_BackLightModelProduct: vec4
-  gl_LightProducts: vec4
-  gl_FrontLightProduct: vec4
-  gl_BackLightProduct: vec4
-  gl_FogParameters: vec4
-  gl_Fog: vec4
-  gl_TextureEnvColor: vec4
-  gl_EyePlaneS: vec4
-  gl_EyePlaneT: vec4
-  gl_EyePlaneR: vec4
-  gl_EyePlaneQ: vec4
-  gl_ObjectPlaneS: vec4
-  gl_ObjectPlaneT: vec4
-  gl_ObjectPlaneR: vec4
-  gl_ObjectPlaneQ: vec4
+  gl_FogCoord: float
+  gl_MaxLights: int
+  gl_MaxClipPlanes: int
+  gl_MaxTextureUnits: int
+  gl_MaxTextureCoords: int
+  gl_MaxVertexAttribs: int
+  gl_MaxVertexUniformComponents: int
+  gl_MaxVaryingFloats: int
+  gl_MaxVertexTextureImageUnits: int
+  gl_MaxCombinedTextureImageUnits: int
+  gl_MaxTextureImageUnits: int
+  gl_MaxFragmentUniformComponents: int
+  gl_MaxDrawBuffers: int
+  gl_ModelViewMatrix: mat4
+  gl_ProjectionMatrix: mat4
+  gl_ModelViewProjectionMatrix: mat4
+  gl_TextureMatrix: array mat4
+  gl_NormalMatrix: mat3
+  gl_ModelViewMatrixInverse: mat4
+  gl_ProjectionMatrixInverse: mat4
+  gl_ModelViewProjectionMatrixInverse: mat4
+  gl_TextureMatrixInverse: array mat4
+  gl_ModelViewMatrixTranspose: mat4
+  gl_ProjectionMatrixTranspose: mat4
+  gl_ModelViewProjectionMatrixTranspose: mat4
+  gl_TextureMatrixTranspose: array mat4
+  gl_ModelViewMatrixInverseTranspose: mat4
+  gl_ProjectionMatrixInverseTranspose: mat4
+  gl_ModelViewProjectionMatrixInverseTranspose: mat4
+  gl_TextureMatrixInverseTranspose: array mat4
+  gl_NormalScale: float
+  gl_DepthRangeParameters: ctor [float, float, float]
+  gl_ClipPlane: array vec4
+  gl_PointParameters: ctor [
+    float, float, float, float, float, float, float
+  ]
+  gl_MaterialParameters: ctor [vec4, vec4, vec4, vec4, float]
+  gl_LightSourceParameters: ctor [
+    vec4, vec4, vec4, vec4, vec4,
+    vec3, float, float, float, float, float, float
+  ]
+  gl_LightModelParameters: ctor [vec4]
+  gl_LightModelProducts: ctor [vec4]
+  gl_LightProducts: ctor [vec4, vec4, vec4]
+  gl_FogParameters: ctor [vec4, float, float, float, float]
+  gl_TextureEnvColor: array vec4
+  gl_EyePlaneS: array vec4
+  gl_EyePlaneT: array vec4
+  gl_EyePlaneR: array vec4
+  gl_EyePlaneQ: array vec4
+  gl_ObjectPlaneS: array vec4
+  gl_ObjectPlaneT: array vec4
+  gl_ObjectPlaneR: array vec4
+  gl_ObjectPlaneQ: array vec4
   gl_FrontColor: vec4
   gl_BackColor: vec4
   gl_FrontSecondaryColor: vec4
   gl_BackSecondaryColor: vec4
-  gl_TexCoord: vec4
-  gl_FogFragCoord: vec4
-  gl_Color: vec4
-  gl_SecondaryColor: vec4
-  gl_TexCoord: vec4
-  gl_FogFragCoord: vec4
-  gl_PointCoord: vec4
-  radians: func
-  degrees: func
-  sin: func
-  cos: func
-  tan: func
-  asin: func
-  acos: func
-  atan: func
-  pow: func
-  exp: func
-  log: func
-  exp2: func
-  log2: func
-  sqrt: func
-  inversesqrt: func
-  abs: func
-  sign: func
-  floor: func
-  ceil: func
-  fract: func
-  mod: func
-  min: func
-  max: func
-  clamp: func
-  mix: func
-  step: func
-  smoothstep: func
-  length: func
-  distance: func
-  dot: func
-  cross: func
-  normalize: func
-  faceforward: func
-  reflect: func
-  refract: func
-  matrixCompMult: func
-  lessThan: func
-  lessThanEqual: func
-  greaterThan: func
-  greaterThanEqual: func
-  equal: func
-  notEqual: func
-  any: func
-  all: func
-  not: func
-  texture2D: func
-  texture2DProj: func
-  texture2DLod: func
-  texture2DProjLod: func
-  textureCube: func
-  textureCubeLod: func
+  gl_TexCoord: array vec4
+  gl_FogFragCoord: float
+  gl_PointCoord: vec2
+
+extend =
+  gl_DepthRange: struct builtintypes.gl_DepthRangeParameters
+  gl_Point: struct builtintypes.gl_PointParameters
+  gl_FrontMaterial: struct builtintypes.gl_MaterialParameters
+  gl_BackMaterial: struct builtintypes.gl_MaterialParameters
+  gl_LightSource: array struct builtintypes.gl_LightSourceParameters
+  gl_LightModel: struct builtintypes.gl_LightSourceParameters
+  gl_FrontLightModelProduct: struct builtintypes.gl_LightModelProducts
+  gl_BackLightModelProduct: struct builtintypes.gl_LightModelProducts
+  gl_FrontLightProduct: struct builtintypes.gl_LightProducts
+  gl_BackLightProduct: struct builtintypes.gl_LightProducts
+  gl_Fog: struct builtintypes.gl_FogParameters
+
+for p in Object.keys extend
+  builtintypes[p] = extend[p]
+
+module.exports = builtintypes
