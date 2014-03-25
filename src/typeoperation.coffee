@@ -62,7 +62,10 @@ module.exports =
           return type2
       when 'function'
         if type2.name is 'unresolvedFunction'
-          return type1
+          return @create 'function',
+            arguments: type1.arguments
+            returns: type1.returns
+            node: type2.node
         if type2.name is 'function'
           return @uniteFunction type1, type2
       when 'constructor'
