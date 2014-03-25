@@ -1,6 +1,7 @@
 through = require 'through'
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
+binaryops = 'add':'+', 'sub':'-', 'mult':'*', 'div':'/'
 typeop = require './typeoperation'
 
 
@@ -109,9 +110,20 @@ transformers =
   ]
 
   transformCallExpression: (node) -> [
-    build type: 'call', children: @transform(node.callee).concat(
-      flatmap node.arguments, (x) => @transform x
-    )
+    if node.callee.type is 'MemberExpression' and
+        node.callee.object.name in keywords and
+        op = binaryops[node.callee.property.name]
+      # binary operator
+      build type: 'binary', data: op, children: node.arguments.map (a) =>
+        child = @transform(a)[0]
+        if child.type is 'binary'
+          build type: 'group', children: [child]
+        else
+          child
+    else
+      build type: 'call', children: @transform(node.callee).concat(
+        flatmap node.arguments, (x) => @transform x
+      )
   ]
 
   transformFunctionDeclaration: (node) -> [

@@ -76,3 +76,12 @@ describe 'transform', ->
     ', '
       vec3 x=pow(vec3(1,2,3),4);
     '
+
+  it 'should convert methods to binary operators', ->
+    test '
+      var a = new vec3(1), b = new vec3(1, 2, 3);
+      var x = vec3.mult(3, vec3.add(vec3.div(b, 2), vec3.sub(a, b)))
+    ', '
+      vec3 a=vec3(1);vec3 b=vec3(1,2,3);\
+      vec3 x=3*((b/2)+(a-b));
+    '
