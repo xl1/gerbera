@@ -121,7 +121,7 @@ transformers =
       # binary operator
       build type: 'binary', data: op, children: node.arguments.map (a) =>
         child = @transform(a)[0]
-        if child.type is 'binary'
+        if child.type is 'binary' or child.type is 'expr'
           build type: 'group', children: [child]
         else
           child

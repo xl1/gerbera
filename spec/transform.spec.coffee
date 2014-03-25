@@ -85,3 +85,12 @@ describe 'transform', ->
       vec3 a=vec3(1);vec3 b=vec3(1,2,3);\
       vec3 x=3*((b/2)+(a-b));
     '
+
+  it 'should add parentheses to make priority clear', ->
+    test '
+      var a, b;
+      var x = vec3.mult(a = 0, b = new vec3(1));
+    ', '
+      float a;vec3 b;\
+      vec3 x=(a=0)*(b=vec3(1));
+    '
