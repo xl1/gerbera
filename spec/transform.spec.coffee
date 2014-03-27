@@ -15,7 +15,7 @@ test = (source, expected) ->
       .on 'close', -> result = buffer
     s.emit 'data', inferrer.infer esprima.parse source
     s.emit 'close'
-  waitsFor 500, -> result
+  waitsFor 10, -> result
   runs ->
     expect(result).toBe expected
 
@@ -102,4 +102,13 @@ describe 'transform', ->
       gl_PointSize = b;
     ', '
       float b;b=1;gl_PointSize=b;
+    '
+
+  it 'should convert array', ->
+    test '
+      var ary = [1, 2, 3];
+      var x = ary[0] + ary[1 + 3 - 2];
+    ', '
+      float ary[3];ary[0]=1;ary[1]=2;ary[2]=3;\
+      float x=(ary[0])+(ary[(1+3)-2]);
     '
