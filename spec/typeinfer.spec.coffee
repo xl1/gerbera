@@ -22,3 +22,9 @@ describe 'typeinfer', ->
       expect ->
         inferrer.infer ast
       .toThrow()
+
+    it 'should find type contradictions in array declarations', ->
+      ast = esprima.parse 'a = [1, new vec2(0), 2, 3];'
+      expect ->
+        inferrer.inferrer ast
+      .toThrow()
