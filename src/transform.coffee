@@ -206,7 +206,11 @@ transformers =
 
   transformMemberExpression: ({ object, property, computed }) ->
     if computed
-      throw new Error 'Not implemented'
+      return [
+        build type: 'binary', data: '[', children: (
+          @transform(object).concat @transform(property)
+        )
+      ]
     @transform property
 
   transformArrayExpression: ({ elements }) ->
