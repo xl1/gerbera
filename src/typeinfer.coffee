@@ -131,9 +131,19 @@ module.exports =
     throw new Error 'Not implemented'
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
+    if object.name in keywords
+      if computed
+        throw new Error 'Not supported'
+      return typeop.create 'function', returns: typeop.create object.name
     if computed
-      throw new Error 'Not implemented'
-    typeop.create 'function', returns: typeop.create object.name
+      type = @infer object, scope
+      if typeop.isArray type
+        return typeop.of type
+      if type.name.match /vec[234]/
+        return typeop.create 'float'
+      if type.name.match /mat([234])/
+        return typeop.create 'vec' + RegExp.$1
+    throw new Error 'Not implemented'
 
   inferArrayExpression: ({ elements }, scope) ->
     typeop.create 'array',
