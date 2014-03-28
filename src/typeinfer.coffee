@@ -141,3 +141,21 @@ module.exports =
       of: elements.reduce (p, c) =>
         typeop.unite p, @infer c, scope
       , undefined
+
+  inferUnaryExpression: ({ operator, argument }, scope) ->
+    switch operator
+      when '+', '-'
+        @infer argument, scope
+      when '!', '~'
+        @infer argument, scope
+        typeop.create 'bool'
+      else
+        # delete, typeof, void
+        throw new Error 'Not supported'
+
+  inferBinaryExpression: ({ operator, left, right }, scope) ->
+    typeop.unite @infer(left, scope), @infer(right, scope)
+
+  inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
+    @infer test, scope
+    typeop.unite @infer(consequent), @infer(alternate)
