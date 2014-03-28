@@ -138,3 +138,10 @@ module.exports =
     if computed
       throw new Error 'Not implemented'
     typeop.create 'function', returns: typeop.create object.name
+
+  inferArrayExpression: ({ elements }, scope) ->
+    typeop.create 'array',
+      length: elements.length
+      of: elements.reduce (p, c) =>
+        typeop.unite p, @infer c, scope
+      , undefined
