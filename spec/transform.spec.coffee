@@ -92,9 +92,11 @@ describe 'transform', ->
     test '
       var a, b;
       var x = vec3.mult(a = 0, b = new vec3(1));
+      a = (b + b)[1];
     ', '
       float a;vec3 b;\
-      vec3 x=(a=0)*(b=vec3(1));
+      vec3 x=(a=0)*(b=vec3(1));\
+      a=(b+b)[1];
     '
 
   it 'should ignore declarations of builtins (CoffeeScript support)', ->
