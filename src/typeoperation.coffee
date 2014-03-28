@@ -20,8 +20,18 @@ module.exports =
         result.inout = !! param.inout
     result
 
+  clone: (type) ->
+    newType = {}
+    for key in Object.keys[type]
+      newType[key] = type[key]
+    newType
+
+  inout: (type) ->
+    newType = @clone type
+    newType.inout = true
+    newType
+
   isUndef: (type) -> (not type) or type.name is 'undef'
-  inout: (type) -> @create type.name, inout: true
   isInout: (type) -> type.inout
   isUnresolved: (type) -> type.name is 'unresolvedFunction'
   isFunction: (type) -> (type.name is 'function') or @isUnresolved type
