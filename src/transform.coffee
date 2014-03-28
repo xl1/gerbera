@@ -211,3 +211,19 @@ transformers =
 
   transformArrayExpression: ({ elements }) ->
     throw new Error 'Should not reach here'
+
+  transformUnaryExpression: ({ operator, argument }) -> [
+    build type: 'unary', data: operator, children: @transform argument
+  ]
+
+  transformBinaryExpression: ({ operator, left, right }) -> [
+    build type: 'binary', data: operator, children: (
+      @transform(left).concat @transform(right)
+    )
+  ]
+
+  transformConditinalExpression: ({ test, consequent, alternate }) -> [
+    build type: 'ternary', data: '?', children: (
+      @transform(test).concat @transform(consequent), @transform(alternate)
+    )
+  ]
