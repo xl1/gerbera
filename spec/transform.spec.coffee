@@ -104,6 +104,19 @@ describe 'transform', ->
       float b;b=1;gl_PointSize=b;
     '
 
+  it 'should convert arithmetic operations', ->
+    test '
+      var a = +1;
+      a = -2;
+      a = 1 + 2;
+      a = 1 - 2;
+      a = 1 * 2;
+      a = 1 / 2;
+      a = 1 % 2;
+    ', '
+      float a=+1;a=-2;a=1+2;a=1-2;a=1*2;a=1/2;a=1%2;
+    '
+
   it 'should convert array', ->
     test '
       var ary = [1, 2, 3];
