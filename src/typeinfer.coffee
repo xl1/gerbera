@@ -30,8 +30,7 @@ module.exports =
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
       node.scope = scope
-      node.glslType = f.call @, node, scope
-      return node
+      return node.glslType = f.call @, node, scope
     else
       throw new Error "Unsupported Node Type: #{node.type}"
 
@@ -45,10 +44,7 @@ module.exports =
     type =
       switch operator
         when '=', '+=', '-='
-          typeop.unite(
-            @infer(left, scope).glslType
-            @infer(right, scope).glslType
-          )
+          typeop.unite @infer(left, scope), @infer(right, scope)
         else
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
@@ -76,11 +72,11 @@ module.exports =
     return
 
   inferVariableDeclarator: ({ id, init }, scope) ->
-    scope.set id.name, init and @infer(init, scope).glslType
+    scope.set id.name, init and @infer init, scope
 
   inferCallExpression: (node, scope) ->
-    calleeType = @infer(node.callee, scope).glslType
-    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
+    calleeType = @infer node.callee, scope
+    argumentsTypes = node.arguments.map (c) => @infer c, scope
     if node.callee.type is 'MemberExpression'
       calleeType.arguments = argumentsTypes
     else
@@ -124,11 +120,11 @@ module.exports =
     scope.set functionName, typeop.create 'unresolvedFunction', node: node
 
   inferReturnStatement: ({ argument }, scope) ->
-    scope.set '#return', @infer(argument, scope).glslType
+    scope.set '#return', @infer argument, scope
     return
 
   inferNewExpression: (node, scope) ->
-    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
+    argumentsTypes = node.arguments.map (c) => @infer c, scope
     calleeName = node.callee.name
     if calleeName in keywords
       return typeop.create calleeName

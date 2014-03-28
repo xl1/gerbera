@@ -6,8 +6,8 @@ describe 'typeinfer', ->
   describe 'infer()', ->
     it 'should return annotated JavaScript AST', ->
       ast = esprima.parse 'var a; a = 1;'
-      annotated = inferrer.infer ast
-      atype = annotated.scope?.get? 'a'
+      inferrer.infer ast
+      atype = ast.scope?.get? 'a'
       expect(atype).toBeDefined()
       expect(atype.name).toBe 'float'
 

@@ -13,7 +13,9 @@ test = (source, expected) ->
       .pipe deparser false
       .on 'data', (r) -> buffer += r
       .on 'close', -> result = buffer
-    s.emit 'data', inferrer.infer esprima.parse source
+    ast = esprima.parse source
+    inferrer.infer ast
+    s.emit 'data', ast
     s.emit 'close'
   waitsFor 10, -> result
   runs ->
