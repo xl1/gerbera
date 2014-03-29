@@ -154,7 +154,7 @@ transformers =
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
       build type: 'binary', data: op, children: (
-        flatmap node.arguments, (x) => @transformWithOptinalGrouping x
+        flatmap node.arguments, (x) => @transformWithOptionalGrouping x
       )
     else
       build type: 'call', children: @transform(node.callee).concat(
@@ -162,7 +162,7 @@ transformers =
       )
   ]
 
-  transformWithOptinalGrouping: (node) ->
+  transformWithOptionalGrouping: (node) ->
     t = @transform node
     if t.length isnt 1
       throw new Error 'Not implemented'
@@ -214,7 +214,7 @@ transformers =
     if computed
       return [
         build type: 'binary', data: '[', children: (
-          @transformWithOptinalGrouping(object).concat @transform(property)
+          @transformWithOptionalGrouping(object).concat @transform(property)
         )
       ]
     @transform property
@@ -224,14 +224,14 @@ transformers =
 
   transformUnaryExpression: ({ operator, argument }) -> [
     build type: 'unary', data: operator, children: (
-      @transformWithOptinalGrouping argument
+      @transformWithOptionalGrouping argument
     )
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
     build type: 'binary', data: operator, children: (
-      @transformWithOptinalGrouping(left)
-        .concat @transformWithOptinalGrouping(right)
+      @transformWithOptionalGrouping(left)
+        .concat @transformWithOptionalGrouping(right)
     )
   ]
 
