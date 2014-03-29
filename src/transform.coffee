@@ -222,6 +222,8 @@ transformers =
           @_transformWithOptionalGrouping(object).concat @transform(property)
         )
       ]
+    if object.name is 'Math' and typeof Math[property.name] is 'number'
+      return [build type: 'literal', data: Math[property.name]]
     @transform property
 
   transformArrayExpression: ({ elements }) ->

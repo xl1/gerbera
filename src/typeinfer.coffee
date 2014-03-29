@@ -131,6 +131,12 @@ module.exports =
     throw new Error 'Not implemented'
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
+    if object.name is 'Math'
+      if computed
+        throw new Error 'Not supported'
+      if typeof Math[property.name] is 'number'
+        return typeop.create 'float'
+      return typeop.create 'function', returns: typeop.create 'float'
     if object.name in keywords
       if computed
         throw new Error 'Not supported'

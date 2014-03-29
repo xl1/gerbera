@@ -129,3 +129,13 @@ describe 'transform', ->
       float ary[3];ary[0]=1;ary[1]=2;ary[2]=3;\
       float x=(ary[0])+(ary[(1+3)-2]);
     '
+
+  it 'should convert Math constants and functions', ->
+    test '
+      var
+        t = Math.PI / 4,
+        x = new vec3(t, Math.cos(t), Math.sin(t));
+    ', '
+      float t=3.141592653589793/4;\
+      vec3 x=vec3(t,cos(t),sin(t));
+    '
