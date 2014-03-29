@@ -153,13 +153,9 @@ transformers =
     if node.callee.type is 'MemberExpression' and
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
-      # binary operator
-      build type: 'binary', data: op, children: node.arguments.map (a) =>
-        child = @transform(a)[0]
-        if child.type is 'binary' or child.type is 'expr'
-          build type: 'group', children: [child]
-        else
-          child
+      build type: 'binary', data: op, children: (
+        flatmap node.arguments, (x) => @transformWithOptinalGrouping x
+      )
     else
       build type: 'call', children: @transform(node.callee).concat(
         flatmap node.arguments, (x) => @transform x
@@ -218,7 +214,7 @@ transformers =
     if computed
       return [
         build type: 'binary', data: '[', children: (
-          @transform(object).concat @transform(property)
+          @transformWithOptinalGrouping(object).concat @transform(property)
         )
       ]
     @transform property
@@ -227,12 +223,15 @@ transformers =
     throw new Error 'Should not reach here'
 
   transformUnaryExpression: ({ operator, argument }) -> [
-    build type: 'unary', data: operator, children: @transform argument
+    build type: 'unary', data: operator, children: (
+      @transformWithOptinalGrouping argument
+    )
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
     build type: 'binary', data: operator, children: (
-      @transform(left).concat @transform(right)
+      @transformWithOptinalGrouping(left)
+        .concat @transformWithOptinalGrouping(right)
     )
   ]
 
