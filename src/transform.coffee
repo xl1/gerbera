@@ -43,18 +43,21 @@ transformers =
       throw new Error "Unsupported Node Type: #{node.type}"
 
   transformAssignmentExpression: ({ operator, left, right }) ->
-    if right.type is 'FunctionExpression'
-      right.id = left
-      @transform right
-    else
-      [
-        build type: 'expr', children: [
-          build
-            type: 'assign'
-            data: operator
-            children: @transform(left).concat @transform(right)
+    switch right.type
+      when 'FunctionExpression'
+        right.id = left
+        @transform right
+      when 'ArrayExpression'
+        @_transformArrayAssignment id: left, init: right
+      else
+        [
+          build type: 'expr', children: [
+            build
+              type: 'assign'
+              data: operator
+              children: @transform(left).concat @transform(right)
+          ]
         ]
-      ]
 
   transformLiteral: ({ value }) -> [
     build type: 'literal', data: value
@@ -76,9 +79,11 @@ transformers =
     build type: 'stmtlist', children: flatmap body, (x) => @transform x
   ]
 
-  transformExpressionStatement: ({ expression }) -> [
-    build type: 'stmt', children: @transform expression
-  ]
+  transformExpressionStatement: ({ expression }) ->
+    children = @transform expression
+    if children[0].type is 'stmt'
+      return children
+    [build type: 'stmt', children: children]
 
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
     flatmap declarations, (decl) =>
