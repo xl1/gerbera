@@ -169,3 +169,5 @@ module.exports =
   inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
     @infer test, scope
     typeop.unite @infer(consequent), @infer(alternate)
+
+  inferEmptyStatement: ->

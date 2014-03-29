@@ -245,3 +245,5 @@ transformers =
       @transform(test).concat @transform(consequent), @transform(alternate)
     )
   ]
+
+  transformEmptyStatement: -> []
