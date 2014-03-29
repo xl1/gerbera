@@ -69,7 +69,7 @@ transformers =
       data: name
   ]
 
-  transformType: (type) ->
+  _transformType: (type) ->
     @transformIdentifier if typeop.isArray(type) then typeop.of(type) else type
 
   transformBlockStatement: ({ body }) -> [
@@ -103,7 +103,7 @@ transformers =
             build type: 'placeholder'
             build type: 'placeholder'
           ].concat(
-            @transformType type
+            @_transformType type
             if typeop.isArray type
               [
                 build type: 'decllist', children: @transform(decl.id).concat [
@@ -120,11 +120,11 @@ transformers =
         ]
       ]
       if typeop.isArray(type) and decl.init?
-        stmts.concat @transformArrayAssignment decl
+        stmts.concat @_transformArrayAssignment decl
       else
         stmts
 
-  transformArrayAssignment: ({ id, init }) ->
+  _transformArrayAssignment: ({ id, init }) ->
     tid = @transform id
     for e, i in init.elements
       build type: 'stmt', children: [
@@ -154,7 +154,7 @@ transformers =
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
       build type: 'binary', data: op, children: (
-        flatmap node.arguments, (x) => @transformWithOptionalGrouping x
+        flatmap node.arguments, (x) => @_transformWithOptionalGrouping x
       )
     else
       build type: 'call', children: @transform(node.callee).concat(
@@ -162,7 +162,7 @@ transformers =
       )
   ]
 
-  transformWithOptionalGrouping: (node) ->
+  _transformWithOptionalGrouping: (node) ->
     t = @transform node
     if t.length isnt 1
       throw new Error 'Not implemented'
@@ -179,7 +179,7 @@ transformers =
         build type: 'placeholder'
         build type: 'placeholder'
         build type: 'placeholder'
-        @transformType(typeop.returns(node.scope.parent.get node.id.name))[0]
+        @_transformType(typeop.returns(node.scope.parent.get node.id.name))[0]
         build type: 'function', children: @transform(node.id).concat([
           build type: 'functionargs', children: node.params.map (x) =>
             build type: 'decl', children: [
@@ -190,7 +190,7 @@ transformers =
               else
                 build type: 'placeholder'
               build type: 'placeholder'
-              @transformType(x.glslType)[0]
+              @_transformType(x.glslType)[0]
               build type: 'decllist', children: @transform x
             ]
         ], @transform node.body)
@@ -214,7 +214,7 @@ transformers =
     if computed
       return [
         build type: 'binary', data: '[', children: (
-          @transformWithOptionalGrouping(object).concat @transform(property)
+          @_transformWithOptionalGrouping(object).concat @transform(property)
         )
       ]
     @transform property
@@ -224,14 +224,14 @@ transformers =
 
   transformUnaryExpression: ({ operator, argument }) -> [
     build type: 'unary', data: operator, children: (
-      @transformWithOptionalGrouping argument
+      @_transformWithOptionalGrouping argument
     )
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
     build type: 'binary', data: operator, children: (
-      @transformWithOptionalGrouping(left)
-        .concat @transformWithOptionalGrouping(right)
+      @_transformWithOptionalGrouping(left)
+        .concat @_transformWithOptionalGrouping(right)
     )
   ]
 
