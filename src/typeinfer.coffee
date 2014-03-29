@@ -30,8 +30,7 @@ module.exports =
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
       node.scope = scope
-      node.glslType = f.call @, node, scope
-      return node
+      return node.glslType = f.call @, node, scope
     else
       throw new Error "Unsupported Node Type: #{node.type}"
 
@@ -45,10 +44,7 @@ module.exports =
     type =
       switch operator
         when '=', '+=', '-='
-          typeop.unite(
-            @infer(left, scope).glslType
-            @infer(right, scope).glslType
-          )
+          typeop.unite @infer(left, scope), @infer(right, scope)
         else
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
@@ -76,11 +72,11 @@ module.exports =
     return
 
   inferVariableDeclarator: ({ id, init }, scope) ->
-    scope.set id.name, init and @infer(init, scope).glslType
+    scope.set id.name, init and @infer init, scope
 
   inferCallExpression: (node, scope) ->
-    calleeType = @infer(node.callee, scope).glslType
-    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
+    calleeType = @infer node.callee, scope
+    argumentsTypes = node.arguments.map (c) => @infer c, scope
     if node.callee.type is 'MemberExpression'
       calleeType.arguments = argumentsTypes
     else
@@ -124,17 +120,52 @@ module.exports =
     scope.set functionName, typeop.create 'unresolvedFunction', node: node
 
   inferReturnStatement: ({ argument }, scope) ->
-    scope.set '#return', @infer(argument, scope).glslType
+    scope.set '#return', @infer argument, scope
     return
 
   inferNewExpression: (node, scope) ->
-    argumentsTypes = node.arguments.map (c) => @infer(c, scope).glslType
+    argumentsTypes = node.arguments.map (c) => @infer c, scope
     calleeName = node.callee.name
     if calleeName in keywords
       return typeop.create calleeName
     throw new Error 'Not implemented'
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
+    if object.name in keywords
+      if computed
+        throw new Error 'Not supported'
+      return typeop.create 'function', returns: typeop.create object.name
     if computed
-      throw new Error 'Not implemented'
-    typeop.create 'function', returns: typeop.create object.name
+      type = @infer object, scope
+      if typeop.isArray type
+        return typeop.of type
+      if type.name.match /vec[234]/
+        return typeop.create 'float'
+      if type.name.match /mat([234])/
+        return typeop.create 'vec' + RegExp.$1
+    throw new Error 'Not implemented'
+
+  inferArrayExpression: ({ elements }, scope) ->
+    typeop.create 'array',
+      length: elements.length
+      of: elements.reduce (p, c) =>
+        typeop.unite p, @infer c, scope
+      , undefined
+
+  inferUnaryExpression: ({ operator, argument }, scope) ->
+    switch operator
+      when '+', '-'
+        @infer argument, scope
+      when '!', '~'
+        @infer argument, scope
+        typeop.create 'bool'
+      else
+        # delete, typeof, void
+        throw new Error 'Not supported'
+
+  inferBinaryExpression: ({ operator, left, right }, scope) ->
+    typeop.unite @infer(left, scope), @infer(right, scope)
+
+  inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
+    @infer test, scope
+    typeop.unite @infer(consequent), @infer(alternate)

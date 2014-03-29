@@ -70,7 +70,7 @@ transformers =
   ]
 
   transformType: (type) ->
-    @transformIdentifier type
+    @transformIdentifier if typeop.isArray(type) then typeop.of(type) else type
 
   transformBlockStatement: ({ body }) -> [
     build type: 'stmtlist', children: flatmap body, (x) => @transform x
@@ -81,17 +81,18 @@ transformers =
   ]
 
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
-    for decl in declarations
+    flatmap declarations, (decl) =>
       if decl.id.name in builtins
-        continue
+        return []
       type = scope.get decl.id.name
       if typeop.isUndef type
-        continue
+        return []
       if typeop.isFunction type
-        continue unless decl.init
+        if not decl.init?
+          return []
         decl.init.id = decl.id
-        @transform(decl.init)[0]
-      else
+        return @transform decl.init
+      stmts = [
         build type: 'stmt', children: [
           build type: 'decl', children: [
             build type: 'placeholder'
@@ -103,9 +104,41 @@ transformers =
             build type: 'placeholder'
           ].concat(
             @transformType type
-            @transform decl
+            if typeop.isArray type
+              [
+                build type: 'decllist', children: @transform(decl.id).concat [
+                  build type: 'quantifier', children: [
+                    build type: 'expr', children: [
+                      build type: 'literal', data: typeop.length type
+                    ]
+                  ]
+                ]
+              ]
+            else
+              @transform decl
           )
         ]
+      ]
+      if typeop.isArray(type) and decl.init?
+        stmts.concat @transformArrayAssignment decl
+      else
+        stmts
+
+  transformArrayAssignment: ({ id, init }) ->
+    tid = @transform id
+    for e, i in init.elements
+      build type: 'stmt', children: [
+        build type: 'expr', children: [
+          build type: 'assign', data: '=', children: [
+            build type: 'binary', data: '[', children: [
+              tid[0]
+              build type: 'expr', children: [
+                build type: 'literal', data: i
+              ]
+            ]
+          ].concat @transform e
+        ]
+      ]
 
   transformVariableDeclarator: ({ id, init }) ->
     tid = @transform id
@@ -120,18 +153,24 @@ transformers =
     if node.callee.type is 'MemberExpression' and
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
-      # binary operator
-      build type: 'binary', data: op, children: node.arguments.map (a) =>
-        child = @transform(a)[0]
-        if child.type is 'binary' or child.type is 'expr'
-          build type: 'group', children: [child]
-        else
-          child
+      build type: 'binary', data: op, children: (
+        flatmap node.arguments, (x) => @transformWithOptinalGrouping x
+      )
     else
       build type: 'call', children: @transform(node.callee).concat(
         flatmap node.arguments, (x) => @transform x
       )
   ]
+
+  transformWithOptinalGrouping: (node) ->
+    t = @transform node
+    if t.length isnt 1
+      throw new Error 'Not implemented'
+    switch t[0].type
+      when 'binary', 'ternary', 'expr'
+        [build type: 'group', children: t]
+      else
+        t
 
   transformFunctionDeclaration: (node) -> [
     build type: 'stmt', children: [
@@ -173,5 +212,31 @@ transformers =
 
   transformMemberExpression: ({ object, property, computed }) ->
     if computed
-      throw new Error 'Not implemented'
+      return [
+        build type: 'binary', data: '[', children: (
+          @transformWithOptinalGrouping(object).concat @transform(property)
+        )
+      ]
     @transform property
+
+  transformArrayExpression: ({ elements }) ->
+    throw new Error 'Should not reach here'
+
+  transformUnaryExpression: ({ operator, argument }) -> [
+    build type: 'unary', data: operator, children: (
+      @transformWithOptinalGrouping argument
+    )
+  ]
+
+  transformBinaryExpression: ({ operator, left, right }) -> [
+    build type: 'binary', data: operator, children: (
+      @transformWithOptinalGrouping(left)
+        .concat @transformWithOptinalGrouping(right)
+    )
+  ]
+
+  transformConditinalExpression: ({ test, consequent, alternate }) -> [
+    build type: 'ternary', data: '?', children: (
+      @transform(test).concat @transform(consequent), @transform(alternate)
+    )
+  ]

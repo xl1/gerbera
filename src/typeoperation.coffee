@@ -9,15 +9,29 @@ module.exports =
         result.node = param.node
       when 'constructor'
         result.arguments = param.arguments or []
-      when 'struct', 'array'
-        result.of = param.of or @create 'undef'
+      when 'array'
+        result.of = param.of
+        result.length = param.length
+        result.inout = !! param.inout
+      when 'struct'
+        result.of = param.of
         result.inout = !! param.inout
       else
         result.inout = !! param.inout
     result
 
+  clone: (type) ->
+    newType = {}
+    for key in Object.keys[type]
+      newType[key] = type[key]
+    newType
+
+  inout: (type) ->
+    newType = @clone type
+    newType.inout = true
+    newType
+
   isUndef: (type) -> (not type) or type.name is 'undef'
-  inout: (type) -> @create type.name, inout: true
   isInout: (type) -> type.inout
   isUnresolved: (type) -> type.name is 'unresolvedFunction'
   isFunction: (type) -> (type.name is 'function') or @isUnresolved type
@@ -26,6 +40,7 @@ module.exports =
   isArray: (type) -> type.name is 'array'
   node: (type) -> type.node
   of: (type) -> type.of
+  length: (type) -> type.length
 
   returns: (type) ->
     if type.name isnt 'function'
@@ -56,6 +71,7 @@ module.exports =
       return type2 or @create 'undef'
     if @isUndef type2
       return type1
+    inout = @isInout(type1) and @isInout(type2)
     switch type1.name
       when 'unresolvedFunction'
         if type2.name is 'unresolvedFunction' or type2.name is 'function'
@@ -75,11 +91,17 @@ module.exports =
             node: type2.node
         if type2.name is 'constructor'
           return @uniteConstructor type1, type2
-      when 'struct', 'array'
+      when 'array'
+        if type1.name is type2.name and @length(type1) is @length(type2)
+          return @create 'array',
+            inout: inout
+            length: @length type1
+            of: @unite @of(type1), @of(type2)
+      when 'struct'
         if type1.name is type2.name
           return @create type1.name,
-            inout: @isInout(type1) and @isInout(type2)
+            inout: inout
             of: @unite @of(type1), @of(type2)
       when type2.name
-        return @create type1.name, inout: @isInout(type1) and @isInout(type2)
+        return @create type1.name, inout: inout
     throw new Error 'Type contradiction'
