@@ -250,6 +250,16 @@ transformers =
 
   transformEmptyStatement: -> []
 
+  _optionalGrouping: (f) -> (node) =>
+    children = f.call @, node
+    if children.length isnt 1
+      throw new Error 'Not implemented'
+    if children[0].type is 'expr'
+      switch children[0].children[0].type
+        when 'binary', 'ternary', 'assign'
+          return [build type: 'group', children: children]
+    children
+
   _optionalCast: (typeName, f) -> (node) =>
     children = f.call @, node
     if node.glslType.name is typeName
