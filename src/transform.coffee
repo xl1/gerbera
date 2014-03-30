@@ -249,3 +249,15 @@ transformers =
   ]
 
   transformEmptyStatement: -> []
+
+  _optionalCast: (typeName, f) -> (node) =>
+    children = f.call @, node
+    if node.glslType.name is typeName
+      children
+    else
+      [
+        build type: 'expr', children: [
+          build type: 'call', children:
+            @transformIdentifier(name: typeName).concat children
+        ]
+      ]
