@@ -118,7 +118,7 @@ describe 'transform', ->
       a = 1 / 2;
       a = 1 % 2;
     ', '
-      float a=+1;a=-2;a=1+2;a=1-2;a=1*2;a=1/2;a=1%2;
+      float a=+1;a=-2;a=1+2;a=1-2;a=1*2;a=1/2;a=mod(1,2);
     '
 
   it 'should convert array', ->
@@ -138,4 +138,28 @@ describe 'transform', ->
     ', '
       float t=3.141592653589793/4;\
       vec3 x=vec3(t,cos(t),sin(t));
+    '
+
+  it 'should convert comparison operations', ->
+    test '
+      var a;
+      a = 1 < 2;
+      a = 1 <= 1;
+      a = 1 > 0;
+      a = 1 >= 1;
+      a = 1 == 1;
+      a = 1 != -1;
+      a = 1 === 1;
+      a = 1 !== -1;
+    ', '
+      bool a;a=1<2;a=1<=1;a=1>0;a=1>=1;a=1==1;a=1!=-1;a=1==1;a=1!=-1;
+    '
+
+  it 'should convert logical operations', ->
+    test '
+      var a;
+      a = true || false;
+      a = !(a && (2 + 3));
+    ', '
+      bool a;a=true||false;a=!(a&&bool(2+3));
     '

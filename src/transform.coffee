@@ -224,8 +224,25 @@ transformers =
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
-    build type: 'binary', data: operator, children:
-      flatmap [left, right], (@_optionalGrouping @transform).bind @
+    if operator is '%'
+      build
+        type: 'call'
+        children: @transformIdentifier name: 'mod'
+          .concat @transform(left), @transform(right)
+    else
+      build
+        type: 'binary'
+        data: operator.slice 0, 2 # (===, !==) -> (==, !=)
+        children:
+          flatmap [left, right], (@_optionalGrouping @transform).bind @
+  ]
+
+  transformLogicalExpression: ({ operator, left, right }) -> [
+    build
+      type: 'binary'
+      data: operator
+      children: flatmap [left, right],
+        (@_optionalGrouping @_optionalCast 'bool', @transform).bind @
   ]
 
   transformConditinalExpression: ({ test, consequent, alternate }) -> [

@@ -51,8 +51,8 @@ module.exports =
       throw new Error 'Not implemented'
     scope.set left.name, type
 
-  inferLiteral: ({ value, raw }) ->
-    typeop.create(if raw is 'true' or raw is 'false' then 'bool' else 'float')
+  inferLiteral: ({ value }) ->
+    typeop.create(if typeof value is 'boolean' then 'bool' else 'float')
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
@@ -159,18 +159,34 @@ module.exports =
       , undefined
 
   inferUnaryExpression: ({ operator, argument }, scope) ->
+    type = @infer argument, scope
     switch operator
       when '+', '-'
-        @infer argument, scope
-      when '!', '~'
-        @infer argument, scope
+        type
+      when '!'
         typeop.create 'bool'
       else
-        # delete, typeof, void
+        # ~, delete, typeof, void
         throw new Error 'Not supported'
 
   inferBinaryExpression: ({ operator, left, right }, scope) ->
-    typeop.unite @infer(left, scope), @infer(right, scope)
+    ltype = @infer left, scope
+    rtype = @infer right, scope
+    switch operator
+      when '+', '-', '*', '/'
+        typeop.unite ltype, rtype
+      when '%'
+        typeop.create 'float'
+      when '<', '<=', '>', '>=', '==', '!=', '===', '!=='
+        typeop.create 'bool'
+      else
+        # |, &, <<, >>, >>>, in, instanceof
+        throw new Error 'Not supported'
+
+  inferLogicalExpression: ({ operator, left, right }, scope) ->
+    @infer left, scope
+    @infer right, scope
+    typeop.create 'bool'
 
   inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
     @infer test, scope
