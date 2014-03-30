@@ -139,3 +139,18 @@ describe 'transform', ->
       float t=3.141592653589793/4;\
       vec3 x=vec3(t,cos(t),sin(t));
     '
+
+  it 'should convert comparison operations', ->
+    test '
+      var a;
+      a = 1 < 2;
+      a = 1 <= 1;
+      a = 1 > 0;
+      a = 1 >= 1;
+      a = 1 == 1;
+      a = 1 != -1;
+      a = 1 === 1;
+      a = 1 !== -1;
+    ', '
+      bool a;a=1<2;a=1<=1;a=1>0;a=1>=1;a=1==1;a=1!=-1;a=1==1;a=1!=-1;
+    '
