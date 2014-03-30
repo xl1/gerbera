@@ -167,16 +167,6 @@ transformers =
       )
   ]
 
-  _transformWithOptionalGrouping: (node) ->
-    t = @transform node
-    if t.length isnt 1
-      throw new Error 'Not implemented'
-    switch t[0].type
-      when 'binary', 'ternary', 'expr'
-        [build type: 'group', children: t]
-      else
-        t
-
   transformFunctionDeclaration: (node) -> [
     build type: 'stmt', children: [
       build type: 'decl', children: [
