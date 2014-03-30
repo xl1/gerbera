@@ -196,9 +196,11 @@ transformers =
 
   transformReturnStatement: ({ argument }) -> [
     build type: 'stmt', children: [
-      build type: 'return', children: [
-        build type: 'expr', children: @transform argument
-      ]
+      build type: 'return', children:
+        if argument
+          [build type: 'expr', children: @transform argument]
+        else
+          []
     ]
   ]
 

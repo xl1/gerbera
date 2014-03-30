@@ -35,10 +35,15 @@ describe 'transform', ->
 
   it 'should infer return value type of function', ->
     test '
+      function func1(){ return; }
       function func2(i){ return i; }
+      func1();
       func2(2);
     ', '
-      float func2(float i){return i;}func2(2);
+      void func1(){return;}\
+      float func2(float i){return i;}\
+      func1();\
+      func2(2);
     '
 
   it 'should convert function expression', ->

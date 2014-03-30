@@ -120,7 +120,8 @@ module.exports =
     scope.set functionName, typeop.create 'unresolvedFunction', node: node
 
   inferReturnStatement: ({ argument }, scope) ->
-    scope.set '#return', @infer argument, scope
+    scope.set '#return',
+      if argument then @infer(argument, scope) else typeop.create 'void'
     return
 
   inferNewExpression: (node, scope) ->
