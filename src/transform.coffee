@@ -51,12 +51,8 @@ transformers =
         @_transformArrayAssignment id: left, init: right
       else
         [
-          build type: 'expr', children: [
-            build
-              type: 'assign'
-              data: operator
-              children: @transform(left).concat @transform(right)
-          ]
+          build type: 'assign', data: operator, children:
+            @transform(left).concat @transform(right)
         ]
 
   transformLiteral: ({ value }) -> [
@@ -83,7 +79,11 @@ transformers =
     children = @transform expression
     if children[0].type is 'stmt'
       return children
-    [build type: 'stmt', children: children]
+    [
+      build type: 'stmt', children: [
+        build type: 'expr', children: children
+      ]
+    ]
 
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
     flatmap declarations, (decl) =>
@@ -137,9 +137,7 @@ transformers =
           build type: 'assign', data: '=', children: [
             build type: 'binary', data: '[', children: [
               tid[0]
-              build type: 'expr', children: [
-                build type: 'literal', data: i
-              ]
+              build type: 'literal', data: i
             ]
           ].concat @transform e
         ]
@@ -198,7 +196,9 @@ transformers =
 
   transformReturnStatement: ({ argument }) -> [
     build type: 'stmt', children: [
-      build type: 'return', children: @transform argument
+      build type: 'return', children: [
+        build type: 'expr', children: @transform argument
+      ]
     ]
   ]
 
@@ -240,10 +240,9 @@ transformers =
     children = f.call @, node
     if children.length isnt 1
       throw new Error 'Not implemented'
-    if children[0].type is 'expr'
-      switch children[0].children[0].type
-        when 'binary', 'ternary', 'assign'
-          return [build type: 'group', children: children]
+    switch children[0].type
+      when 'binary', 'ternary', 'assign'
+        return [build type: 'group', children: children]
     children
 
   _optionalCast: (typeName, f) -> (node) =>
@@ -252,8 +251,6 @@ transformers =
       children
     else
       [
-        build type: 'expr', children: [
-          build type: 'call', children:
-            @transformIdentifier(name: typeName).concat children
-        ]
+        build type: 'call', children:
+          @transformIdentifier(name: typeName).concat children
       ]
