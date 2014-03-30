@@ -51,8 +51,8 @@ module.exports =
       throw new Error 'Not implemented'
     scope.set left.name, type
 
-  inferLiteral: ({ value, raw }) ->
-    typeop.create(if raw is 'true' or raw is 'false' then 'bool' else 'float')
+  inferLiteral: ({ value }) ->
+    typeop.create(if typeof value is 'boolean' then 'bool' else 'float')
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
