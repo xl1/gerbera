@@ -183,6 +183,11 @@ module.exports =
         # |, &, <<, >>, >>>, in, instanceof
         throw new Error 'Not supported'
 
+  inferLogicalExpression: ({ operator, left, right }, scope) ->
+    @infer left, scope
+    @infer right, scope
+    typeop.create 'bool'
+
   inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
     @infer test, scope
     typeop.unite @infer(consequent), @infer(alternate)

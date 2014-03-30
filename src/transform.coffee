@@ -237,6 +237,14 @@ transformers =
           flatmap [left, right], (@_optionalGrouping @transform).bind @
   ]
 
+  transformLogicalExpression: ({ operator, left, right }) -> [
+    build
+      type: 'binary'
+      data: operator
+      children: flatmap [left, right],
+        (@_optionalGrouping @_optionalCast 'bool', @transform).bind @
+  ]
+
   transformConditinalExpression: ({ test, consequent, alternate }) -> [
     build type: 'ternary', data: '?', children: (
       @transform(test).concat @transform(consequent), @transform(alternate)
