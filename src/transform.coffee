@@ -159,7 +159,7 @@ transformers =
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
       build type: 'binary', data: op, children: (
-        flatmap node.arguments, (x) => @_transformWithOptionalGrouping x
+        flatmap node.arguments, (x) => (@_optionalGrouping @transform) x
       )
     else
       build type: 'call', children: @transform(node.callee).concat(
@@ -218,9 +218,8 @@ transformers =
   transformMemberExpression: ({ object, property, computed }) ->
     if computed
       return [
-        build type: 'binary', data: '[', children: (
-          @_transformWithOptionalGrouping(object).concat @transform(property)
-        )
+        build type: 'binary', data: '[', children:
+          (@_optionalGrouping @transform)(object).concat @transform(property)
       ]
     if object.name is 'Math' and typeof Math[property.name] is 'number'
       return [build type: 'literal', data: Math[property.name]]
@@ -230,16 +229,13 @@ transformers =
     throw new Error 'Should not reach here'
 
   transformUnaryExpression: ({ operator, argument }) -> [
-    build type: 'unary', data: operator, children: (
-      @_transformWithOptionalGrouping argument
-    )
+    build type: 'unary', data: operator, children:
+      (@_optionalGrouping @transform) argument
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
-    build type: 'binary', data: operator, children: (
-      @_transformWithOptionalGrouping(left)
-        .concat @_transformWithOptionalGrouping(right)
-    )
+    build type: 'binary', data: operator, children:
+      flatmap [left, right], (@_optionalGrouping @transform).bind @
   ]
 
   transformConditinalExpression: ({ test, consequent, alternate }) -> [
