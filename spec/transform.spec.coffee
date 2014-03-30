@@ -30,7 +30,7 @@ describe 'transform', ->
       function func(i){}
       func(1);
     ', '
-      void func(float i){}func(1)
+      void func(float i){}func(1);
     '
 
   it 'should infer return value type of function', ->
@@ -38,7 +38,7 @@ describe 'transform', ->
       function func2(i){ return i; }
       func2(2);
     ', '
-      float func2(float i){return i;}func2(2)
+      float func2(float i){return i;}func2(2);
     '
 
   it 'should convert function expression', ->
@@ -46,7 +46,7 @@ describe 'transform', ->
       var func = function(x, y){};
       func(0, 1);
     ', '
-      void func(float x,float y){}func(0,1)
+      void func(float x,float y){}func(0,1);
     '
 
   it 'should convert function expression assignment', ->
@@ -56,7 +56,7 @@ describe 'transform', ->
       func(0);
       func(1);
     ', '
-      void func(float x){}func(0)func(1)
+      void func(float x){}func(0);func(1);
     '
 
   it 'should convert const declaration', ->

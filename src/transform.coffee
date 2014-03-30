@@ -51,12 +51,8 @@ transformers =
         @_transformArrayAssignment id: left, init: right
       else
         [
-          build type: 'expr', children: [
-            build
-              type: 'assign'
-              data: operator
-              children: @transform(left).concat @transform(right)
-          ]
+          build type: 'assign', data: operator, children:
+            @transform(left).concat @transform(right)
         ]
 
   transformLiteral: ({ value }) -> [
@@ -83,7 +79,11 @@ transformers =
     children = @transform expression
     if children[0].type is 'stmt'
       return children
-    [build type: 'stmt', children: children]
+    [
+      build type: 'stmt', children: [
+        build type: 'expr', children: children
+      ]
+    ]
 
   transformVariableDeclaration: ({ declarations, kind, scope }) ->
     flatmap declarations, (decl) =>
@@ -137,9 +137,7 @@ transformers =
           build type: 'assign', data: '=', children: [
             build type: 'binary', data: '[', children: [
               tid[0]
-              build type: 'expr', children: [
-                build type: 'literal', data: i
-              ]
+              build type: 'literal', data: i
             ]
           ].concat @transform e
         ]
@@ -159,23 +157,13 @@ transformers =
         node.callee.object.name in keywords and
         op = binaryops[node.callee.property.name]
       build type: 'binary', data: op, children: (
-        flatmap node.arguments, (x) => @_transformWithOptionalGrouping x
+        flatmap node.arguments, (x) => (@_optionalGrouping @transform) x
       )
     else
       build type: 'call', children: @transform(node.callee).concat(
         flatmap node.arguments, (x) => @transform x
       )
   ]
-
-  _transformWithOptionalGrouping: (node) ->
-    t = @transform node
-    if t.length isnt 1
-      throw new Error 'Not implemented'
-    switch t[0].type
-      when 'binary', 'ternary', 'expr'
-        [build type: 'group', children: t]
-      else
-        t
 
   transformFunctionDeclaration: (node) -> [
     build type: 'stmt', children: [
@@ -208,7 +196,9 @@ transformers =
 
   transformReturnStatement: ({ argument }) -> [
     build type: 'stmt', children: [
-      build type: 'return', children: @transform argument
+      build type: 'return', children: [
+        build type: 'expr', children: @transform argument
+      ]
     ]
   ]
 
@@ -218,9 +208,8 @@ transformers =
   transformMemberExpression: ({ object, property, computed }) ->
     if computed
       return [
-        build type: 'binary', data: '[', children: (
-          @_transformWithOptionalGrouping(object).concat @transform(property)
-        )
+        build type: 'binary', data: '[', children:
+          (@_optionalGrouping @transform)(object).concat @transform(property)
       ]
     if object.name is 'Math' and typeof Math[property.name] is 'number'
       return [build type: 'literal', data: Math[property.name]]
@@ -230,16 +219,13 @@ transformers =
     throw new Error 'Should not reach here'
 
   transformUnaryExpression: ({ operator, argument }) -> [
-    build type: 'unary', data: operator, children: (
-      @_transformWithOptionalGrouping argument
-    )
+    build type: 'unary', data: operator, children:
+      (@_optionalGrouping @transform) argument
   ]
 
   transformBinaryExpression: ({ operator, left, right }) -> [
-    build type: 'binary', data: operator, children: (
-      @_transformWithOptionalGrouping(left)
-        .concat @_transformWithOptionalGrouping(right)
-    )
+    build type: 'binary', data: operator, children:
+      flatmap [left, right], (@_optionalGrouping @transform).bind @
   ]
 
   transformConditinalExpression: ({ test, consequent, alternate }) -> [
@@ -249,3 +235,22 @@ transformers =
   ]
 
   transformEmptyStatement: -> []
+
+  _optionalGrouping: (f) -> (node) =>
+    children = f.call @, node
+    if children.length isnt 1
+      throw new Error 'Not implemented'
+    switch children[0].type
+      when 'binary', 'ternary', 'assign'
+        return [build type: 'group', children: children]
+    children
+
+  _optionalCast: (typeName, f) -> (node) =>
+    children = f.call @, node
+    if node.glslType.name is typeName
+      children
+    else
+      [
+        build type: 'call', children:
+          @transformIdentifier(name: typeName).concat children
+      ]
