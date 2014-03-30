@@ -118,7 +118,7 @@ describe 'transform', ->
       a = 1 / 2;
       a = 1 % 2;
     ', '
-      float a=+1;a=-2;a=1+2;a=1-2;a=1*2;a=1/2;a=1%2;
+      float a=+1;a=-2;a=1+2;a=1-2;a=1*2;a=1/2;a=mod(1,2);
     '
 
   it 'should convert array', ->
