@@ -193,3 +193,10 @@ module.exports =
     typeop.unite @infer(consequent, scope), @infer(alternate, scope)
 
   inferEmptyStatement: ->
+
+  inferIfStatement: ({ test, consequent, alternate }, scope) ->
+    @infer test, scope
+    @infer consequent, scope
+    if alternate
+      @infer alternate, scope
+    return

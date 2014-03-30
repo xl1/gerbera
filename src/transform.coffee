@@ -253,6 +253,13 @@ transformers =
 
   transformEmptyStatement: -> []
 
+  transformIfStatement: ({ test, consequent, alternate }) ->
+    children =
+      (@_optionalCast 'bool', @transform)(test).concat @transform(consequent)
+    if alternate
+      children.push(build type: 'stmt', children: @transform alternate)
+    [build type: 'stmt', children: [build type: 'if', children: children]]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

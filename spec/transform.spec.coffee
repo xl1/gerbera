@@ -163,3 +163,20 @@ describe 'transform', ->
     ', '
       bool a;a=true||false;a=!(a&&bool(2+3));
     '
+
+  it 'should convert if', ->
+    test '
+      var x;
+      if(true) x = 0;
+      if(x){ x = 1; }
+      if(x == 1 || x == 0){
+        x = 2;
+      } else {
+        x = 0;
+      }
+    ', '
+      float x;\
+      if(true) x=0;\
+      if(bool(x)){x=1;}\
+      if((x==1)||(x==0)){x=2;}else{x=0;}
+    '
