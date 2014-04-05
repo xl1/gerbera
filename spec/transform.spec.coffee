@@ -185,3 +185,12 @@ describe 'transform', ->
       if(bool(x)){x=1;}\
       if((x==1)||(x==0)){x=2;}else{x=0;}
     '
+
+  it 'should convert integer operations', ->
+    test '
+      function func(x){ return ++x; }
+      var a = 1, b = 2, c = a++, d = func(b);
+    ', '
+      int func(int x){return x+=1;}\
+      int a=1;int b=2;int c=a++;int d=func(b);
+    '
