@@ -272,6 +272,14 @@ transformers =
       children.push(build type: 'stmt', children: @transform alternate)
     [build type: 'stmt', children: [build type: 'if', children: children]]
 
+  transformUpdateExpression: ({ operator, argument, prefix }) -> [
+    if prefix
+      build type: 'assign', data: operator[0] + '=', children:
+        @transform(argument).concat [build type: 'literal', data: 1]
+    else
+      build type: 'suffix', data: operator, children: @transform argument
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

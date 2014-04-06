@@ -203,3 +203,6 @@ module.exports =
     if alternate
       @infer alternate, scope
     return
+
+  inferUpdateExpression: ({ operator, argument, prefix }, scope) ->
+    @infer(argument, scope).unite new Type 'int'
