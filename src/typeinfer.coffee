@@ -149,6 +149,10 @@ module.exports =
           return type.getOf()
         when 'vec2', 'vec3', 'vec4'
           return new Type 'float'
+        when 'ivec2', 'ivec3', 'ivec4'
+          return new Type 'int'
+        when 'bvec2', 'bvce3', 'bvec4'
+          return new Type 'bool'
         when 'mat2' then return new Type 'vec2'
         when 'mat3' then return new Type 'vec3'
         when 'mat4' then return new Type 'vec4'
