@@ -62,6 +62,15 @@ module.exports = class Type
       return @
     typeName = type.getName()
     switch @getName()
+      when 'number'
+        if typeName is 'int' or typeName is 'float' or typeName is 'number'
+          return type
+      when 'int'
+        if typeName is 'int' or typeName is 'number'
+          return @
+      when 'float'
+        if typeName is 'float' or typeName is 'number'
+          return @
       when 'unresolvedFunction'
         if type.isFunction()
           return type
