@@ -143,6 +143,7 @@ module.exports =
         throw new Error 'Not supported'
       return new Type 'function', returns: new Type object.name
     if computed
+      @infer(property, scope).unite new Type 'int'
       type = @infer object, scope
       switch type.getName()
         when 'array'
