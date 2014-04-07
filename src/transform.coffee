@@ -55,9 +55,10 @@ transformers =
             @transform(left).concat @transform(right)
         ]
 
-  transformLiteral: ({ value }) -> [
-    build type: 'literal', data: value
-  ]
+  transformLiteral: ({ value, glslType }) ->
+    if (glslType.getDeclarationName() is 'float') and (value % 1 is 0)
+      value = (value |0) + '.'
+    [build type: 'literal', data: value]
 
   transformIdentifier: ({ name }) -> [
     build
