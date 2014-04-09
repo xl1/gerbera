@@ -2,7 +2,7 @@ through = require 'through'
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
 binaryops = 'add':'+', 'sub':'-', 'mult':'*', 'div':'/'
-typeop = require './typeoperation'
+Type = require './glsltype'
 
 
 flatmap = (ary, func) ->
@@ -69,7 +69,8 @@ transformers =
   ]
 
   _transformType: (type) ->
-    @transformIdentifier if typeop.isArray(type) then typeop.of(type) else type
+    @transformIdentifier
+      name: (if type.isArray() then type.getOf() else type).getName()
 
   transformBlockStatement: ({ body }) -> [
     build type: 'stmtlist', children: flatmap body, (x) => @transform x
@@ -90,9 +91,9 @@ transformers =
       if decl.id.name in builtins
         return []
       type = scope.get decl.id.name
-      if typeop.isUndef type
+      if type.isUndef()
         return []
-      if typeop.isFunction type
+      if type.isFunction()
         if not decl.init?
           return []
         decl.init.id = decl.id
@@ -109,12 +110,12 @@ transformers =
             build type: 'placeholder'
           ].concat(
             @_transformType type
-            if typeop.isArray type
+            if type.isArray()
               [
                 build type: 'decllist', children: @transform(decl.id).concat [
                   build type: 'quantifier', children: [
                     build type: 'expr', children: [
-                      build type: 'literal', data: typeop.length type
+                      build type: 'literal', data: type.getLength()
                     ]
                   ]
                 ]
@@ -124,7 +125,7 @@ transformers =
           )
         ]
       ]
-      if typeop.isArray(type) and decl.init?
+      if type.isArray() and decl.init?
         stmts.concat @_transformArrayAssignment decl
       else
         stmts
@@ -172,20 +173,29 @@ transformers =
         build type: 'placeholder'
         build type: 'placeholder'
         build type: 'placeholder'
-        @_transformType(typeop.returns(node.scope.parent.get node.id.name))[0]
+        @_transformType(node.scope.parent.get(node.id.name).getReturns())[0]
         build type: 'function', children: @transform(node.id).concat([
-          build type: 'functionargs', children: node.params.map (x) =>
+          build type: 'functionargs', children: node.params.map((x) =>
             build type: 'decl', children: [
               build type: 'placeholder'
               build type: 'placeholder'
-              if typeop.isInout(x.glslType)
-                build type: 'keyword', data: 'inout'
-              else
-                build type: 'placeholder'
+              build type: 'placeholder'
               build type: 'placeholder'
               @_transformType(x.glslType)[0]
               build type: 'decllist', children: @transform x
             ]
+          ).concat node.scope.inouts.map((sym) =>
+            build type: 'decl', children: [
+              build type: 'placeholder'
+              build type: 'placeholder'
+              build type: 'keyword', data: 'inout'
+              build type: 'placeholder'
+              @_transformType(node.scope.get sym)[0]
+              build type: 'decllist', children: [
+                build type: 'ident', data: sym
+              ]
+            ]
+          )
         ], @transform node.body)
       ]
     ]
@@ -273,7 +283,7 @@ transformers =
 
   _optionalCast: (typeName, f) -> (node) =>
     children = f.call @, node
-    if node.glslType.name is typeName
+    if node.glslType.getName() is typeName
       children
     else
       [
