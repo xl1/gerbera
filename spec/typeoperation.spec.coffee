@@ -1,6 +1,4 @@
-typeop = require '../src/typeoperation'
+Type = require '../src/glsltype'
 
-describe 'typeoperation', ->
-  describe 'create()', ->
-    it 'should return a type', ->
-      expect(typeop.create 'hoge').toBeDefined()
+describe 'Type', ->
+  describe '()', ->
