@@ -1,107 +1,102 @@
-module.exports =
-  create: (name, param={}) ->
-    result = { name }
+class TypeUnit
+  constructor: (@name, param={}) ->
     switch name
       when 'function'
-        result.arguments = param.arguments or []
-        result.returns = param.returns or @create 'undef'
+        @arguments = param.arguments
+        @returns = param.returns or new Type
       when 'unresolvedFunction'
-        result.node = param.node
+        @node = param.node
       when 'constructor'
-        result.arguments = param.arguments or []
+        @arguments = param.arguments or []
       when 'array'
-        result.of = param.of
-        result.length = param.length
-        result.inout = !! param.inout
+        @of = param.of
+        @length = param.length
+        @inout = !! param.inout
       when 'struct'
-        result.of = param.of
-        result.inout = !! param.inout
+        @of = param.of
+        @inout = !! param.inout
       else
-        result.inout = !! param.inout
-    result
+        @inout = !! param.inout
 
-  clone: (type) ->
-    newType = {}
-    for key in Object.keys[type]
-      newType[key] = type[key]
-    newType
 
-  inout: (type) ->
-    newType = @clone type
-    newType.inout = true
-    newType
+module.exports = class Type
+  constructor: (name, param) ->
+    @unit = new TypeUnit name, param
 
-  isUndef: (type) -> (not type) or type.name is 'undef'
-  isInout: (type) -> type.inout
-  isUnresolved: (type) -> type.name is 'unresolvedFunction'
-  isFunction: (type) -> (type.name is 'function') or @isUnresolved type
-  isConstructor: (type) -> type.name is 'constructor'
-  isStruct: (type) -> type.name is 'struct'
-  isArray: (type) -> type.name is 'array'
-  node: (type) -> type.node
-  of: (type) -> type.of
-  length: (type) -> type.length
+  isUndef: -> not @unit.name
+  isInout: -> @unit.inout
+  isUnresolved: -> @unit.name is 'unresolvedFunction'
+  isFunction: -> (@unit.name is 'function') or @isUnresolved()
+  isConstructor: -> @unit.name is 'constructor'
+  isStruct: -> @unit.name is 'struct'
+  isArray: -> @unit.name is 'array'
 
-  returns: (type) ->
-    if type.name isnt 'function'
-      throw new Error "Type #{type?.name} is not function"
-    type.returns
+  getName: -> @unit.name  
+  getNode: -> @unit.node
+  getOf: -> @unit.of
+  getLength: -> @unit.length
+  getReturns: -> @unit.returns
+  getArguments: -> @unit.arguments
 
-  arguments: (type) ->
-    if type.name isnt 'function' and type.name isnt 'constructor'
-      throw new Error "Type #{type?.name} is not function"
-    type.arguments
+  unite: (type) ->
+    if type
+      @unit = type.unit = @_unite(type).unit
+    @
 
-  uniteFunction: (type1, type2) ->
-    type = @uniteConstructor type1, type2
-    type.returns = @unite @returns(type1), @returns(type2)
+  _uniteFunction: (type) ->
+    type = @_uniteConstructor type
+    type.unit.returns = @getReturns().unite type.getReturns()
     type
 
-  uniteConstructor: (type1, type2) ->
-    args1 = @arguments type1
-    args2 = @arguments type2
-    if args1?.length isnt args2?.length
-      throw new Error 'Type contradiction'
-    @create 'function',
-      arguments: (@unite args1[i], args2[i] for i in [0...args1.length] by 1)
-      node: type1.node or type2.node
+  _uniteConstructor: (type) ->
+    args =
+      if args1 = @getArguments()
+        if args2 = type.getArguments()
+          if args1.length - args2.length
+            throw new Error 'Type contradiction'
+          x.unite(args2[i]) for x, i in args1
+        args1
+      else
+        type.getArguments()
+    new Type 'function', arguments: args, node: @getNode() or type.getNode()
 
-  unite: (type1, type2) ->
-    if @isUndef type1
-      return type2 or @create 'undef'
-    if @isUndef type2
-      return type1
-    inout = @isInout(type1) and @isInout(type2)
-    switch type1.name
+  _unite: (type) ->
+    if @isUndef()
+      return type
+    if type.isUndef()
+      return @
+    inout = @isInout() and type.isInout()
+    typeName = type.getName()
+    switch @getName()
       when 'unresolvedFunction'
-        if type2.name is 'unresolvedFunction' or type2.name is 'function'
-          return type2
+        if type.isFunction()
+          return type
       when 'function'
-        if type2.name is 'unresolvedFunction'
-          return @create 'function',
-            arguments: type1.arguments
-            returns: type1.returns
-            node: type2.node
-        if type2.name is 'function'
-          return @uniteFunction type1, type2
+        if typeName is 'unresolvedFunction'
+          return new Type 'function',
+            arguments: @getArguments()
+            returns: @getReturns()
+            node: type.getNode()
+        if typeName is 'function'
+          return @_uniteFunction type
       when 'constructor'
-        if type2.name is 'unresolvedFunction'
-          return @create 'constructor',
-            arguments: type1.arguments
-            node: type2.node
-        if type2.name is 'constructor'
-          return @uniteConstructor type1, type2
+        if typeName is 'unresolvedFunction'
+          return new Type 'constructor',
+            arguments: @getArguments()
+            node: type.getNode()
+        if typeName is 'constructor'
+          return @_uniteConstructor type
       when 'array'
-        if type1.name is type2.name and @length(type1) is @length(type2)
-          return @create 'array',
+        if typeName is 'array' and @getLength() is type.getLength()
+          return new Type 'array',
             inout: inout
-            length: @length type1
-            of: @unite @of(type1), @of(type2)
+            length: @getLength
+            of: @getOf().unite type.getOf()
       when 'struct'
-        if type1.name is type2.name
-          return @create type1.name,
+        if typeName is 'struct'
+          return new Type 'struct',
             inout: inout
-            of: @unite @of(type1), @of(type2)
-      when type2.name
-        return @create type1.name, inout: inout
+            of: @getOf().unite type.getOf()
+      when typeName
+        return new Type typeName, inout: inout
     throw new Error 'Type contradiction'
