@@ -11,12 +11,8 @@ class TypeUnit
       when 'array'
         @of = param.of
         @length = param.length
-        @inout = !! param.inout
       when 'struct'
         @of = param.of
-        @inout = !! param.inout
-      else
-        @inout = !! param.inout
 
 
 module.exports = class Type
@@ -24,7 +20,6 @@ module.exports = class Type
     @unit = new TypeUnit name, param
 
   isUndef: -> not @unit.name
-  isInout: -> @unit.inout
   isUnresolved: -> @unit.name is 'unresolvedFunction'
   isFunction: -> (@unit.name is 'function') or @isUnresolved()
   isConstructor: -> @unit.name is 'constructor'
@@ -65,7 +60,6 @@ module.exports = class Type
       return type
     if type.isUndef()
       return @
-    inout = @isInout() and type.isInout()
     typeName = type.getName()
     switch @getName()
       when 'unresolvedFunction'
@@ -89,14 +83,11 @@ module.exports = class Type
       when 'array'
         if typeName is 'array' and @getLength() is type.getLength()
           return new Type 'array',
-            inout: inout
             length: @getLength
             of: @getOf().unite type.getOf()
       when 'struct'
         if typeName is 'struct'
-          return new Type 'struct',
-            inout: inout
-            of: @getOf().unite type.getOf()
+          return new Type 'struct', of: @getOf().unite type.getOf()
       when typeName
-        return new Type typeName, inout: inout
+        return new Type typeName
     throw new Error 'Type contradiction'
