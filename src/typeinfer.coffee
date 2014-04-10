@@ -1,6 +1,6 @@
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
-typeop = require './typeoperation'
+Type = require './glsltype'
 builtintypes = require './builtintypes'
 
 
@@ -9,14 +9,17 @@ class Scope
     if parent
       parent.children.push @
     @children = []
-    @symTable = {}  
+    @symTable = {}
+    @inouts = []
   set: (symbol, type) ->
-    @symTable[symbol] = typeop.unite type, @symTable[symbol]
+    @symTable[symbol] = (type or new Type).unite @symTable[symbol]
   get: (symbol) ->
     if type = @symTable[symbol]
       return type
     if type = @parent?.get symbol
-      return typeop.inout type
+      if symbol not in @inouts
+        @inouts.push symbol
+      return type
     throw new Error "Undeclared symbol #{symbol}"
   getLocal: (symbol) ->
     @symTable[symbol]
@@ -30,7 +33,7 @@ module.exports =
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
       node.scope = scope
-      return node.glslType = f.call @, node, scope
+      return node.glslType = f.call(@, node, scope) ? new Type
     else
       throw new Error "Unsupported Node Type: #{node.type}"
 
@@ -44,7 +47,7 @@ module.exports =
     type =
       switch operator
         when '=', '+=', '-='
-          typeop.unite @infer(left, scope), @infer(right, scope)
+          @infer(left, scope).unite @infer(right, scope)
         else
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
@@ -52,7 +55,7 @@ module.exports =
     scope.set left.name, type
 
   inferLiteral: ({ value }) ->
-    typeop.create(if typeof value is 'boolean' then 'bool' else 'float')
+    new Type(if typeof value is 'boolean' then 'bool' else 'float')
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
@@ -78,34 +81,31 @@ module.exports =
     calleeType = @infer node.callee, scope
     argumentsTypes = node.arguments.map (c) => @infer c, scope
     if node.callee.type is 'MemberExpression'
-      calleeType.arguments = argumentsTypes
+      calleeType.unite new Type 'function', arguments: argumentsTypes
     else
-      if typeop.isUnresolved calleeType
-        calleeScope = calleeType.node.scope
-        for arg, i in calleeType.node.params
+      calleeNode = calleeType.getNode()
+      if calleeType.isUnresolved()
+        calleeScope = calleeNode.scope
+        for arg, i in calleeNode.params
           calleeScope.set arg.name, argumentsTypes[i]
           @infer arg, calleeScope
-        @infer calleeType.node.body, calleeScope
-        calleeType = typeop.unite(
-          calleeType
-          typeop.create 'function',
+        @infer calleeNode.body, calleeScope
+        calleeType.unite(
+          new Type 'function',
             arguments: argumentsTypes
-            returns: calleeScope.getLocal('#return') or typeop.create 'void'
+            returns: calleeScope.getLocal('#return') or new Type 'void'
         )
       else
-        calleeType = typeop.unite(
-          calleeType
-          typeop.create 'function', arguments: argumentsTypes
-        )
+        calleeType.unite new Type 'function', arguments: argumentsTypes
       if node.callee.name
         scope.set node.callee.name, calleeType
       else
-        scope.set calleeType.node.id.name, calleeType
-    typeop.returns calleeType
+        scope.set calleeNode.id.name, calleeType
+    calleeType.getReturns()
 
   inferFunctionDeclaration: (node, scope) ->
     node.scope = new Scope scope
-    scope.set node.id.name, typeop.create 'unresolvedFunction', node: node
+    scope.set node.id.name, new Type 'unresolvedFunction', node: node
     return
 
   inferFunctionExpression: (node, scope) ->
@@ -117,18 +117,18 @@ module.exports =
       node.id =
         type: 'Identifier'
         name: functionName
-    scope.set functionName, typeop.create 'unresolvedFunction', node: node
+    scope.set functionName, new Type 'unresolvedFunction', node: node
 
   inferReturnStatement: ({ argument }, scope) ->
     scope.set '#return',
-      if argument then @infer(argument, scope) else typeop.create 'void'
+      if argument then @infer(argument, scope) else new Type 'void'
     return
 
   inferNewExpression: (node, scope) ->
     argumentsTypes = node.arguments.map (c) => @infer c, scope
     calleeName = node.callee.name
     if calleeName in keywords
-      return typeop.create calleeName
+      return new Type calleeName
     throw new Error 'Not implemented'
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
@@ -136,28 +136,30 @@ module.exports =
       if computed
         throw new Error 'Not supported'
       if typeof Math[property.name] is 'number'
-        return typeop.create 'float'
-      return typeop.create 'function', returns: typeop.create 'float'
+        return new Type 'float'
+      return new Type 'function', returns: new Type 'float'
     if object.name in keywords
       if computed
         throw new Error 'Not supported'
-      return typeop.create 'function', returns: typeop.create object.name
+      return new Type 'function', returns: new Type object.name
     if computed
       type = @infer object, scope
-      if typeop.isArray type
-        return typeop.of type
-      if type.name.match /vec[234]/
-        return typeop.create 'float'
-      if type.name.match /mat([234])/
-        return typeop.create 'vec' + RegExp.$1
+      switch type.getName()
+        when 'array'
+          return type.getOf()
+        when 'vec2', 'vec3', 'vec4'
+          return new Type 'float'
+        when 'mat2' then return new Type 'vec2'
+        when 'mat3' then return new Type 'vec3'
+        when 'mat4' then return new Type 'vec4'
     throw new Error 'Not implemented'
 
   inferArrayExpression: ({ elements }, scope) ->
-    typeop.create 'array',
+    new Type 'array',
       length: elements.length
       of: elements.reduce (p, c) =>
-        typeop.unite p, @infer c, scope
-      , undefined
+        p.unite @infer c, scope
+      , new Type
 
   inferUnaryExpression: ({ operator, argument }, scope) ->
     type = @infer argument, scope
@@ -165,7 +167,7 @@ module.exports =
       when '+', '-'
         type
       when '!'
-        typeop.create 'bool'
+        new Type 'bool'
       else
         # ~, delete, typeof, void
         throw new Error 'Not supported'
@@ -175,11 +177,11 @@ module.exports =
     rtype = @infer right, scope
     switch operator
       when '+', '-', '*', '/'
-        typeop.unite ltype, rtype
+        ltype.unite rtype
       when '%'
-        typeop.create 'float'
+        new Type 'float'
       when '<', '<=', '>', '>=', '==', '!=', '===', '!=='
-        typeop.create 'bool'
+        new Type 'bool'
       else
         # |, &, <<, >>, >>>, in, instanceof
         throw new Error 'Not supported'
@@ -187,11 +189,11 @@ module.exports =
   inferLogicalExpression: ({ operator, left, right }, scope) ->
     @infer left, scope
     @infer right, scope
-    typeop.create 'bool'
+    new Type 'bool'
 
   inferConditinalExpression: ({ test, consequent, alternate }, scope) ->
     @infer test, scope
-    typeop.unite @infer(consequent, scope), @infer(alternate, scope)
+    @infer(consequent, scope).unite @infer(alternate, scope)
 
   inferEmptyStatement: ->
 

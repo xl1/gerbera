@@ -1,17 +1,17 @@
-to = require './typeoperation'
+Type = require './glsltype'
 
-array = (x) -> to.create 'array', of: x
-struct = (x) -> to.create 'struct', of: x
-ctor = (args) -> to.create 'constructor', arguments: args
+array = (x) -> new Type 'array', of: x
+struct = (x) -> new Type 'struct', of: x
+ctor = (args) -> new Type 'constructor', arguments: args
 
-bool = to.create 'bool'
-int = to.create 'int'
-float = to.create 'float'
-vec2 = to.create 'vec2'
-vec3 = to.create 'vec3'
-vec4 = to.create 'vec4'
-mat3 = to.create 'mat3'
-mat4 = to.create 'mat4'
+bool = new Type 'bool'
+int = new Type 'int'
+float = new Type 'float'
+vec2 = new Type 'vec2'
+vec3 = new Type 'vec3'
+vec4 = new Type 'vec4'
+mat3 = new Type 'mat3'
+mat4 = new Type 'mat4'
 
 builtintypes =
   gl_Position: vec4

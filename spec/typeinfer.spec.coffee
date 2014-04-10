@@ -1,5 +1,4 @@
 esprima = require 'esprima'
-typeop = require '../src/typeoperation'
 inferrer = require '../src/typeinfer'
 
 describe 'typeinfer', ->
@@ -9,7 +8,7 @@ describe 'typeinfer', ->
       inferrer.infer ast
       atype = ast.scope?.get? 'a'
       expect(atype).toBeDefined()
-      expect(atype.name).toBe 'float'
+      expect(atype.getName()).toBe 'float'
 
     it 'should throw if an undeclared symbol is found', ->
       ast = esprima.parse 'a = 1;'
