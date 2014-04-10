@@ -55,7 +55,9 @@ module.exports =
     scope.set left.name, type
 
   inferLiteral: ({ value }) ->
-    new Type(if typeof value is 'boolean' then 'bool' else 'float')
+    if typeof value is 'boolean'
+      return new Type 'bool'
+    new Type(if value % 1 then 'float' else 'number')
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
