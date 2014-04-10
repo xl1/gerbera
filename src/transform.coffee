@@ -69,8 +69,7 @@ transformers =
   ]
 
   _transformType: (type) ->
-    @transformIdentifier
-      name: (if type.isArray() then type.getOf() else type).getName()
+    @transformIdentifier name: type.getDeclarationName()
 
   transformBlockStatement: ({ body }) -> [
     build type: 'stmtlist', children: flatmap body, (x) => @transform x
