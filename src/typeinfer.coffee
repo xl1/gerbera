@@ -55,7 +55,9 @@ module.exports =
     scope.set left.name, type
 
   inferLiteral: ({ value }) ->
-    new Type(if typeof value is 'boolean' then 'bool' else 'float')
+    if typeof value is 'boolean'
+      return new Type 'bool'
+    new Type(if value % 1 then 'float' else 'number')
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
@@ -143,12 +145,17 @@ module.exports =
         throw new Error 'Not supported'
       return new Type 'function', returns: new Type object.name
     if computed
+      @infer(property, scope).unite new Type 'int'
       type = @infer object, scope
       switch type.getName()
         when 'array'
           return type.getOf()
         when 'vec2', 'vec3', 'vec4'
           return new Type 'float'
+        when 'ivec2', 'ivec3', 'ivec4'
+          return new Type 'int'
+        when 'bvec2', 'bvce3', 'bvec4'
+          return new Type 'bool'
         when 'mat2' then return new Type 'vec2'
         when 'mat3' then return new Type 'vec3'
         when 'mat4' then return new Type 'vec4'
@@ -203,3 +210,6 @@ module.exports =
     if alternate
       @infer alternate, scope
     return
+
+  inferUpdateExpression: ({ operator, argument, prefix }, scope) ->
+    @infer(argument, scope).unite new Type 'int'

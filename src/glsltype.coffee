@@ -33,6 +33,17 @@ module.exports = class Type
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
 
+  getDeclarationName: ->
+    switch @getName()
+      when 'number'
+        'float'
+      when 'array'
+        @getOf().getDeclarationName()
+      when 'unresolvedFunction', ''
+        null
+      else
+        @getName()
+
   unite: (type) ->
     if type
       @unit = type.unit = @_unite(type).unit
@@ -62,6 +73,15 @@ module.exports = class Type
       return @
     typeName = type.getName()
     switch @getName()
+      when 'number'
+        if typeName is 'int' or typeName is 'float' or typeName is 'number'
+          return type
+      when 'int'
+        if typeName is 'int' or typeName is 'number'
+          return @
+      when 'float'
+        if typeName is 'float' or typeName is 'number'
+          return @
       when 'unresolvedFunction'
         if type.isFunction()
           return type

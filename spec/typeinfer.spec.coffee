@@ -4,7 +4,7 @@ inferrer = require '../src/typeinfer'
 describe 'typeinfer', ->
   describe 'infer()', ->
     it 'should return annotated JavaScript AST', ->
-      ast = esprima.parse 'var a; a = 1;'
+      ast = esprima.parse 'var a; a = 1.5;'
       inferrer.infer ast
       atype = ast.scope?.get? 'a'
       expect(atype).toBeDefined()
