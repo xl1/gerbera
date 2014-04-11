@@ -1,23 +1,90 @@
 class TypeUnit
   constructor: (@name, param={}) ->
+    @holders = []
     switch name
       when 'function'
         @arguments = param.arguments
         @returns = param.returns or new Type
+        @node = param.node
       when 'unresolvedFunction'
         @node = param.node
       when 'constructor'
         @arguments = param.arguments or []
+        @node = param.node
       when 'array'
         @of = param.of
         @length = param.length
       when 'struct'
         @of = param.of
 
+  uniteFunction: (t) ->
+    t = @uniteConstructor t
+    t.returns = @returns.unite t.returns
+    t
+
+  uniteConstructor: (t) ->
+    args =
+      if args1 = @arguments
+        if args2 = t.arguments
+          if args1.length - args2.length
+            throw new Error 'Type contradiction'
+          x.unite(args2[i]) for x, i in args1
+        args1
+      else
+        t.arguments
+    new TypeUnit 'function', arguments: args, node: @node or t.node
+
+  unite: (t) ->
+    return t unless @name
+    return @ unless t.name
+    switch @name
+      when 'number'
+        if t.name in ['int', 'float', 'number']
+          return t
+      when 'int'
+        if t.name is 'int' or t.name is 'number'
+          return @
+      when 'float'
+        if t.name is 'float' or t.name is 'number'
+          return @
+      when 'unresolvedFunction'
+        if t.name in ['function', 'constructor', 'unresolvedFunction']
+          t.node = @node
+          return t
+      when 'function'
+        if t.name is 'unresolvedFunction'
+          return new TypeUnit 'function',
+            arguments: @arguments
+            returns: @returns
+            node: t.node
+        if t.name is 'function'
+          return @uniteFunction t
+      when 'constructor'
+        if t.name is 'unresolvedFunction'
+          return new TypeUnit 'constructor',
+            arguments: @arguments
+            node: t.node
+        if t.name is 'constructor'
+          return @uniteConstructor t
+      when 'array'
+        if t.name is 'array' and @length is t.length
+          return new TypeUnit 'array',
+            length: @length
+            of: @of.unite t.of
+      when 'struct'
+        if t.name is 'struct'
+          return new TypeUnit 'struct', of: @of.unite t.of
+      when t.name
+        return new TypeUnit t.name
+    throw new Error 'Type contradiction'
+
 
 module.exports = class Type
   constructor: (name, param) ->
-    @unit = new TypeUnit name, param
+    @append new TypeUnit(name, param)
+
+  append: (@unit) ->
+    unit.holders.push @
 
   isUndef: -> not @unit.name
   isUnresolved: -> @unit.name is 'unresolvedFunction'
@@ -26,68 +93,27 @@ module.exports = class Type
   isStruct: -> @unit.name is 'struct'
   isArray: -> @unit.name is 'array'
 
-  getName: -> @unit.name  
+  getName: -> @unit.name
   getNode: -> @unit.node
   getOf: -> @unit.of
   getLength: -> @unit.length
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
 
+  getDeclarationName: ->
+    switch @getName()
+      when 'number'
+        'float'
+      when 'array'
+        @getOf().getDeclarationName()
+      when 'unresolvedFunction', ''
+        null
+      else
+        @getName()
+
   unite: (type) ->
     if type
-      @unit = type.unit = @_unite(type).unit
+      newUnit = @unit.unite type.unit
+      t.append(newUnit) for t in @unit.holders
+      t.append(newUnit) for t in type.unit.holders
     @
-
-  _uniteFunction: (type) ->
-    type = @_uniteConstructor type
-    type.unit.returns = @getReturns().unite type.getReturns()
-    type
-
-  _uniteConstructor: (type) ->
-    args =
-      if args1 = @getArguments()
-        if args2 = type.getArguments()
-          if args1.length - args2.length
-            throw new Error 'Type contradiction'
-          x.unite(args2[i]) for x, i in args1
-        args1
-      else
-        type.getArguments()
-    new Type 'function', arguments: args, node: @getNode() or type.getNode()
-
-  _unite: (type) ->
-    if @isUndef()
-      return type
-    if type.isUndef()
-      return @
-    typeName = type.getName()
-    switch @getName()
-      when 'unresolvedFunction'
-        if type.isFunction()
-          return type
-      when 'function'
-        if typeName is 'unresolvedFunction'
-          return new Type 'function',
-            arguments: @getArguments()
-            returns: @getReturns()
-            node: type.getNode()
-        if typeName is 'function'
-          return @_uniteFunction type
-      when 'constructor'
-        if typeName is 'unresolvedFunction'
-          return new Type 'constructor',
-            arguments: @getArguments()
-            node: type.getNode()
-        if typeName is 'constructor'
-          return @_uniteConstructor type
-      when 'array'
-        if typeName is 'array' and @getLength() is type.getLength()
-          return new Type 'array',
-            length: @getLength
-            of: @getOf().unite type.getOf()
-      when 'struct'
-        if typeName is 'struct'
-          return new Type 'struct', of: @getOf().unite type.getOf()
-      when typeName
-        return new Type typeName
-    throw new Error 'Type contradiction'
