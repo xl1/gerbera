@@ -175,6 +175,8 @@ class Transformer
     else
       build type: 'call', children: @transform(node.callee).concat(
         flatmap node.arguments, (x) => @transform x
+        flatmap node.callee.glslType?.getNode()?.scope.inouts or [], (x) =>
+          @transformIdentifier name: x
       )
   ]
 
