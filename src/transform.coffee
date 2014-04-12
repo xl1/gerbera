@@ -176,7 +176,7 @@ class Transformer
       )
   ]
 
-  transformFunctionDeclaration: (node) -> [
+  transformFunctionDeclaration: (node) -> @_appendToRoot [
     build type: 'stmt', children: [
       build type: 'decl', children: [
         build type: 'placeholder'
