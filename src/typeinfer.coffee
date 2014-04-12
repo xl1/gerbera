@@ -212,3 +212,26 @@ module.exports =
 
   inferUpdateExpression: ({ operator, argument, prefix }, scope) ->
     @infer(argument, scope).unite new Type 'int'
+
+  inferWhileStatement: ({ test, body }, scope) ->
+    @infer test, scope
+    @infer body, scope
+    return
+
+  inferDoWhileStatement: (node, scope) ->
+    @inferWhileStatement node, scope
+
+  inferForStatement: ({ init, test, update, body }, scope) ->
+    init and @infer init, scope
+    test and @infer test, scope
+    update and @infer update, scope
+    @infer body, scope
+    return
+
+  inferBreakStatement: ({ label }, scope) ->
+    if label
+      throw new Error 'Not supported'
+
+  inferContinueStatement: ({ label }, scope) ->
+    if label
+      throw new Error 'Not supported'

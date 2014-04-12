@@ -196,3 +196,63 @@ describe 'transform', ->
       int func(int x){return x+=1;}\
       int a=1;int b=2;int c=a++;int d=func(b);
     '
+
+  it 'should convert while statement', ->
+    test '
+      function func(x){}
+      var i = 0;
+      while(i < 3){
+        func(i);
+        i++;
+      }
+    ', '
+      void func(int x){}\
+      int i=0;\
+      while(i<3){func(i);i++;}
+    '
+
+  it 'should convert do-while statement', ->
+    test '
+      function func(x){}
+      var i = 0;
+      do {
+        func(i);
+        i++;
+      } while(i < 4)
+    ', '
+      void func(int x){}\
+      int i=0;\
+      do{func(i);i++;}while(i<4);
+    '
+
+  it 'should convert for statement', ->
+    test '
+      var len = 10, func = function(x){};
+      for(var i = 0; i < len; i++) func(i);
+    ', '
+      int len=10;void func(int x){}\
+      for(int i=0;i<len;i++)func(i);
+    '
+
+  it 'should convert break and continue statement', ->
+    test '
+      var n = 27;
+      for(var i = 0; i < 9999; i++){
+        if (n === 1) break;
+        if (n % 2){
+          n = 3 * n + 1;
+          continue;
+        }
+        n = n / 2;
+      }
+    ', '
+      float n=27.;\
+      for(int i=0;i<9999;i++){\
+        if(n==1.) break;\
+        if(bool(mod(n,2.))){n=(3.*n)+1.;continue;}\
+        n=n/2.;\
+      }
+    '
+
+  it 'should convert for loop without init, test or update expressions', ->
+    test 'for(;;){ break; }', 'for(;;){break;}'

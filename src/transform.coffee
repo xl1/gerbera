@@ -280,6 +280,41 @@ transformers =
       build type: 'suffix', data: operator, children: @transform argument
   ]
 
+  transformWhileStatement: ({ test, body }) -> [
+    build type: 'stmt', children: [
+      build type: 'whileloop', children:
+        (@_optionalCast 'bool', @transform)(test).concat @transform body
+    ]
+  ]
+
+  transformDoWhileStatement: ({ test, body }) -> [
+    build type: 'stmt', children: [
+      build type: 'do-while', children:
+        @transform(body).concat (@_optionalCast 'bool', @transform)(test)
+    ]
+  ]
+
+  transformForStatement: ({ init, test, update, body }) ->
+    emptyExpr = -> [build type: 'expr', children: []]
+    [
+      build type: 'stmt', children: [
+        build type: 'forloop', children: [].concat(
+          if init then @transform(init)[0].children else emptyExpr()
+          if test then (@_optionalCast 'bool', @transform) test else emptyExpr()
+          if update then @transform update else emptyExpr()
+          @transform body
+        )
+      ]
+    ]
+
+  transformBreakStatement: -> [
+    build type: 'stmt', children: [build type: 'break']
+  ]
+
+  transformContinueStatement: -> [
+    build type: 'stmt', children: [build type: 'continue']
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1
