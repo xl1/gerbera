@@ -245,7 +245,8 @@ describe 'transform', ->
       var len = 10, func = function(x){};
       for(var i = 0; i < len; i++) func(i);
     ', '
-      int len=10;void func(int x){}\
+      void func(int x){}\
+      int len=10;\
       for(int i=0;i<len;i++)func(i);
     '
 
