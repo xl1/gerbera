@@ -294,6 +294,17 @@ transformers =
     ]
   ]
 
+  transformForStatement: ({ init, test, update, body }) -> [
+    build type: 'stmt', children: [
+      build type: 'forloop', children: [].concat(
+        @transform(init)[0].children
+        (@_optionalCast 'bool', @transform)(test)
+        @transform update
+        @transform body
+      )
+    ]
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

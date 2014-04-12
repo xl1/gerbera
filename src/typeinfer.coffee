@@ -220,3 +220,10 @@ module.exports =
 
   inferDoWhileStatement: (node, scope) ->
     @inferWhileStatement node, scope
+
+  inferForStatement: ({ init, test, update, body }, scope) ->
+    @infer init, scope
+    @infer test, scope
+    @infer update, scope
+    @infer body, scope
+    return

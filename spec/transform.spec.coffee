@@ -224,3 +224,12 @@ describe 'transform', ->
       int i=0;\
       do{func(i);i++;}while(i<4);
     '
+
+  it 'should convert for statement', ->
+    test '
+      var len = 10, func = function(x){};
+      for(var i = 0; i < len; i++) func(i);
+    ', '
+      int len=10;void func(int x){}\
+      for(int i=0;i<len;i++)func(i);
+    '
