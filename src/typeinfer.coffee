@@ -180,11 +180,10 @@ module.exports =
         throw new Error 'Not supported'
 
   inferBinaryExpression: ({ operator, left, right }, scope) ->
-    ltype = @infer left, scope
-    rtype = @infer right, scope
+    type = @infer(left, scope).unite @infer(right, scope)
     switch operator
       when '+', '-', '*', '/'
-        ltype.unite rtype
+        type
       when '%'
         new Type 'float'
       when '<', '<=', '>', '>=', '==', '!=', '===', '!=='
