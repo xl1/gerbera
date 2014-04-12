@@ -253,3 +253,6 @@ describe 'transform', ->
         n=n/2.;\
       }
     '
+
+  it 'should convert for loop without init, test or update expressions', ->
+    test 'for(;;){ break; }', 'for(;;){break;}'

@@ -294,16 +294,18 @@ transformers =
     ]
   ]
 
-  transformForStatement: ({ init, test, update, body }) -> [
-    build type: 'stmt', children: [
-      build type: 'forloop', children: [].concat(
-        @transform(init)[0].children
-        (@_optionalCast 'bool', @transform)(test)
-        @transform update
-        @transform body
-      )
+  transformForStatement: ({ init, test, update, body }) ->
+    emptyExpr = -> [build type: 'expr', children: []]
+    [
+      build type: 'stmt', children: [
+        build type: 'forloop', children: [].concat(
+          if init then @transform(init)[0].children else emptyExpr()
+          if test then (@_optionalCast 'bool', @transform) test else emptyExpr()
+          if update then @transform update else emptyExpr()
+          @transform body
+        )
+      ]
     ]
-  ]
 
   transformBreakStatement: -> [
     build type: 'stmt', children: [build type: 'break']

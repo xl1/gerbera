@@ -222,9 +222,9 @@ module.exports =
     @inferWhileStatement node, scope
 
   inferForStatement: ({ init, test, update, body }, scope) ->
-    @infer init, scope
-    @infer test, scope
-    @infer update, scope
+    init and @infer init, scope
+    test and @infer test, scope
+    update and @infer update, scope
     @infer body, scope
     return
 
