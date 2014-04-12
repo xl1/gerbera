@@ -88,6 +88,8 @@ class Transformer
 
   transformExpressionStatement: ({ expression }) ->
     children = @transform expression
+    if children.length is 0
+      return []
     if children[0].type is 'stmt'
       return children
     [
