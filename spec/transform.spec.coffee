@@ -196,3 +196,17 @@ describe 'transform', ->
       int func(int x){return x+=1;}\
       int a=1;int b=2;int c=a++;int d=func(b);
     '
+
+  it 'should convert while statement', ->
+    test '
+      function func(x){}
+      var i = 0;
+      while(i < 3){
+        func(i);
+        i++;
+      }
+    ', '
+      void func(int x){}\
+      int i=0;\
+      while(i<3){func(i);i++;}
+    '

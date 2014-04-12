@@ -280,6 +280,13 @@ transformers =
       build type: 'suffix', data: operator, children: @transform argument
   ]
 
+  transformWhileStatement: ({ test, body }) -> [
+    build type: 'stmt', children: [
+      build type: 'whileloop', children:
+        (@_optionalCast 'bool', @transform)(test).concat @transform body
+    ]
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

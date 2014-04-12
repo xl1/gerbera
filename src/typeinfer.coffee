@@ -212,3 +212,8 @@ module.exports =
 
   inferUpdateExpression: ({ operator, argument, prefix }, scope) ->
     @infer(argument, scope).unite new Type 'int'
+
+  inferWhileStatement: ({ test, body }, scope) ->
+    @infer test, scope
+    @infer body, scope
+    return
