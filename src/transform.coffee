@@ -305,6 +305,14 @@ transformers =
     ]
   ]
 
+  transformBreakStatement: -> [
+    build type: 'stmt', children: [build type: 'break']
+  ]
+
+  transformContinueStatement: -> [
+    build type: 'stmt', children: [build type: 'continue']
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

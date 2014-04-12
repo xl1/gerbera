@@ -227,3 +227,11 @@ module.exports =
     @infer update, scope
     @infer body, scope
     return
+
+  inferBreakStatement: ({ label }, scope) ->
+    if label
+      throw new Error 'Not supported'
+
+  inferContinueStatement: ({ label }, scope) ->
+    if label
+      throw new Error 'Not supported'

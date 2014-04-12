@@ -233,3 +233,23 @@ describe 'transform', ->
       int len=10;void func(int x){}\
       for(int i=0;i<len;i++)func(i);
     '
+
+  it 'should convert break and continue statement', ->
+    test '
+      var n = 27;
+      for(var i = 0; i < 9999; i++){
+        if (n === 1) break;
+        if (n % 2){
+          n = 3 * n + 1;
+          continue;
+        }
+        n = n / 2;
+      }
+    ', '
+      float n=27.;\
+      for(int i=0;i<9999;i++){\
+        if(n==1.) break;\
+        if(bool(mod(n,2.))){n=(3.*n)+1.;continue;}\
+        n=n/2.;\
+      }
+    '
