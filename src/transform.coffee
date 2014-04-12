@@ -287,6 +287,13 @@ transformers =
     ]
   ]
 
+  transformDoWhileStatement: ({ test, body }) -> [
+    build type: 'stmt', children: [
+      build type: 'do-while', children:
+        @transform(body).concat (@_optionalCast 'bool', @transform)(test)
+    ]
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

@@ -217,3 +217,6 @@ module.exports =
     @infer test, scope
     @infer body, scope
     return
+
+  inferDoWhileStatement: (node, scope) ->
+    @inferWhileStatement node, scope

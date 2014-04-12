@@ -210,3 +210,17 @@ describe 'transform', ->
       int i=0;\
       while(i<3){func(i);i++;}
     '
+
+  it 'should convert do-while statement', ->
+    test '
+      function func(x){}
+      var i = 0;
+      do {
+        func(i);
+        i++;
+      } while(i < 4)
+    ', '
+      void func(int x){}\
+      int i=0;\
+      do{func(i);i++;}while(i<4);
+    '
