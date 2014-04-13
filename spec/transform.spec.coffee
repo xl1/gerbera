@@ -64,6 +64,21 @@ describe 'transform', ->
       void func(float x){}func(0.);func(1.);
     '
 
+  it 'should convert nested functions', ->
+    test '
+      var parentFunc = function(x){
+        var childFunc = function(y){
+          return x + y;
+        };
+        return childFunc(2);
+      };
+      parentFunc(1);
+    ', '
+      float childFunc(float y,inout float x){return x+y;}\
+      float parentFunc(float x){return childFunc(2.,x);}\
+      parentFunc(1.);
+    '
+
   it 'should convert const declaration', ->
     test '
       const a = 1;
@@ -230,7 +245,8 @@ describe 'transform', ->
       var len = 10, func = function(x){};
       for(var i = 0; i < len; i++) func(i);
     ', '
-      int len=10;void func(int x){}\
+      void func(int x){}\
+      int len=10;\
       for(int i=0;i<len;i++)func(i);
     '
 

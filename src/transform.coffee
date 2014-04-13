@@ -27,20 +27,30 @@ module.exports = ->
   through (program) ->
     if program.parent
       return
-    root = build
-      type: 'stmtlist'
-      children: flatmap program.body, (x) -> transformers.transform x
+    root = (new Transformer).transform program
     for child in root.children
       @queue child
     return
 
 
-transformers =
+class Transformer
   transform: (node) ->
     if f = @["transform#{node.type}"]
       return f.call @, node
     else
       throw new Error "Unsupported Node Type: #{node.type}"
+
+  _appendToRoot: (trees) ->
+    for t in trees
+      @root.children.push t
+      t.parent = @root
+    []
+
+  transformProgram: ({ body }) ->
+    @root = build type: 'stmtlist', children: []
+    for x in body
+      @_appendToRoot @transform x
+    @root
 
   transformAssignmentExpression: ({ operator, left, right }) ->
     switch right.type
@@ -78,6 +88,8 @@ transformers =
 
   transformExpressionStatement: ({ expression }) ->
     children = @transform expression
+    if children.length is 0
+      return []
     if children[0].type is 'stmt'
       return children
     [
@@ -163,10 +175,12 @@ transformers =
     else
       build type: 'call', children: @transform(node.callee).concat(
         flatmap node.arguments, (x) => @transform x
+        flatmap node.callee.glslType?.getNode()?.scope.inouts or [], (x) =>
+          @transformIdentifier name: x
       )
   ]
 
-  transformFunctionDeclaration: (node) -> [
+  transformFunctionDeclaration: (node) -> @_appendToRoot [
     build type: 'stmt', children: [
       build type: 'decl', children: [
         build type: 'placeholder'
