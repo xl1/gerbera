@@ -26,6 +26,8 @@ class Scope
 
 
 module.exports =
+  Scope: Scope
+
   createAnonymousFunctionName: do ->
     i = 0
     -> "anonymousFuncion#{i++}"
