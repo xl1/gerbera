@@ -1,4 +1,3 @@
-through = require 'through'
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
 binaryops = 'add':'+', 'sub':'-', 'mult':'*', 'div':'/'
@@ -23,17 +22,7 @@ build = ({ type, data, children }) ->
   result
 
 
-module.exports = ->
-  through (program) ->
-    if program.parent
-      return
-    root = (new Transformer).transform program
-    for child in root.children
-      @queue child
-    return
-
-
-class Transformer
+module.exports =
   transform: (node) ->
     if f = @["transform#{node.type}"]
       return f.call @, node
