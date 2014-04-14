@@ -1,25 +1,16 @@
-Stream = require 'stream'
 esprima = require 'esprima'
 deparser = require 'glsl-deparser'
 inferrer = require '../src/typeinfer'
-transform = require '../src/transform'
+transformer = require '../src/transform'
 
 test = (source, expected) ->
-  buffer = ''
   result = ''
-  runs ->
-    s = new Stream
-    s.pipe transform()
-      .pipe deparser false
-      .on 'data', (r) -> buffer += r
-      .on 'close', -> result = buffer
-    ast = esprima.parse source
-    inferrer.infer ast
-    s.emit 'data', ast
-    s.emit 'close'
-  waitsFor 10, -> result
-  runs ->
-    expect(result).toBe expected
+  stream = deparser(false).on('data', (r) -> result += r)
+  ast = esprima.parse source
+  inferrer.infer ast
+  for c in transformer.transform(ast).children
+    stream.write c
+  expect(result).toBe expected
 
 describe 'transform', ->
   it 'should convert variable declaration', ->
