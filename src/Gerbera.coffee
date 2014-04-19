@@ -59,3 +59,22 @@ module.exports =
     for stmt in program.children
       stream.write stmt
     result
+
+
+  # types
+  bool: new Type 'bool'
+  int: new Type 'int'
+  float: new Type 'float'
+  vec2: new Type 'vec2'
+  vec3: new Type 'vec3'
+  vec4: new Type 'vec4'
+  ivec2: new Type 'ivec2'
+  ivec3: new Type 'ivec3'
+  ivec4: new Type 'ivec4'
+  bvec2: new Type 'bvec2'
+  bvec3: new Type 'bvec3'
+  bvec4: new Type 'bvec4'
+  mat2: new Type 'mat2'
+  mat3: new Type 'mat3'
+  mat4: new Type 'mat4'
+  array: (t) -> new Type 'array', of: t
