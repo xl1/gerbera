@@ -6,6 +6,15 @@ describe 'Type', ->
       expect(new Type('float').getName()).toBe 'float'
       expect(new Type('unresolvedFunction').getName()).toBe 'unresolvedFunction'
 
+  describe 'getMember', ->
+    it 'should return a type of member of struct', ->
+      t = new Type 'struct',
+        members:
+          a: new Type 'float'
+          b: new Type 'int'
+      expect(t.getMember('a').getName()).toBe 'float'
+      expect(t.getMember('b').getName()).toBe 'int'
+
   describe 'unite()', ->
     it 'should unite number + (undef) --> number', ->
       expect (new Type).unite(new Type 'number').getName()
