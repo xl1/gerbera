@@ -54,7 +54,7 @@ module.exports =
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
       throw new Error 'Not implemented'
-    scope.set left.name, type
+    type
 
   inferLiteral: ({ value }) ->
     if typeof value is 'boolean'
