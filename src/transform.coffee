@@ -337,6 +337,29 @@ module.exports =
     build type: 'stmt', children: [build type: 'continue']
   ]
 
+  transformPrecisionDeclaration: ({ precision, type }) -> [
+    build type: 'stmt', children: [
+      build type: 'precision', children: [
+        build type: 'keyword', data: precision
+      ].concat @_transformType type
+    ]
+  ]
+
+  transformExternalDeclaration: ({ name, kind, type }) -> [
+    build type: 'stmt', children: [
+      build type: 'decl', children: [
+        build type: 'placeholder'
+        build type: 'keyword', data: kind
+        build type: 'placeholder'
+        build type: 'placeholder'
+        @_transformType(type)[0]
+        build type: 'decllist', children: [
+          build type: 'ident', data: name
+        ]
+      ]
+    ]
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

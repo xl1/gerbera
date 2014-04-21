@@ -26,6 +26,8 @@ class Scope
 
 
 module.exports =
+  Scope: Scope
+
   createAnonymousFunctionName: do ->
     i = 0
     -> "anonymousFuncion#{i++}"
@@ -38,7 +40,7 @@ module.exports =
       throw new Error "Unsupported Node Type: #{node.type}"
 
   inferProgram: (node, scope) ->
-    node.scope = new Scope
+    node.scope = scope or new Scope
     for child in node.body
       @infer child, node.scope
     return
@@ -52,7 +54,7 @@ module.exports =
           throw new Error 'Not implemented'
     if left.type isnt 'Identifier'
       throw new Error 'Not implemented'
-    scope.set left.name, type
+    type
 
   inferLiteral: ({ value }) ->
     if typeof value is 'boolean'
