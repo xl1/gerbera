@@ -40,7 +40,7 @@ module.exports =
       throw new Error "Unsupported Node Type: #{node.type}"
 
   inferProgram: (node, scope) ->
-    node.scope = new Scope
+    node.scope = scope or new Scope
     for child in node.body
       @infer child, node.scope
     return
