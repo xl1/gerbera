@@ -230,13 +230,24 @@ module.exports =
 
   transformMemberExpression: ({ object, property, computed }) ->
     if computed
-      return [
+      [
         build type: 'binary', data: '[', children:
           (@_optionalGrouping @transform)(object).concat @transform(property)
       ]
-    if object.name is 'Math' and typeof Math[property.name] is 'number'
-      return [build type: 'literal', data: Math[property.name]]
-    @transform property
+    else if object.name is 'Math'
+      if typeof Math[property.name] is 'number'
+        [build type: 'literal', data: Math[property.name]]
+      else
+        @transform property
+    else if object.name in keywords
+      @transform property
+    else if object.glslType.isTransparent()
+      @transform property
+    else
+      [
+        build type: 'operator', data: '.', children:
+          (@_optionalGrouping @transform)(object).concat @transform(property)
+      ]
 
   transformArrayExpression: ({ elements }) ->
     throw new Error 'Should not reach here'

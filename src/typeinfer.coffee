@@ -159,6 +159,11 @@ module.exports =
         when 'mat2' then return new Type 'vec2'
         when 'mat3' then return new Type 'vec3'
         when 'mat4' then return new Type 'vec4'
+    else
+      type = @infer object, scope
+      switch type.getName()
+        when 'instance'
+          return type.getOf().getMember property.name
     throw new Error 'Not implemented'
 
   inferArrayExpression: ({ elements }, scope) ->

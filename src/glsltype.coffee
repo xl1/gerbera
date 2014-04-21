@@ -14,8 +14,13 @@ class TypeUnit
       when 'array'
         @of = param.of
         @length = param.length
-      when 'struct'
+      when 'instance'
+        if param.of.getName() isnt 'struct'
+          throw new Error 'instance.of should be a struct'
         @of = param.of
+        @transparent = !!param.transparent
+      when 'struct'
+        @members = param.members
 
   uniteFunction: (t) ->
     t = @uniteConstructor t
@@ -72,8 +77,10 @@ class TypeUnit
             length: @length
             of: @of.unite t.of
       when 'struct'
-        if t.name is 'struct'
-          return new TypeUnit 'struct', of: @of.unite t.of
+        throw new Error 'Struct type cannot be united'
+      when 'instance'
+        if t.name is 'instance' and @transparent is t.transparent
+          return @
       when t.name
         return new TypeUnit t.name
     throw new Error 'Type contradiction'
@@ -91,7 +98,9 @@ module.exports = class Type
   isFunction: -> (@unit.name is 'function') or @isUnresolved()
   isConstructor: -> @unit.name is 'constructor'
   isStruct: -> @unit.name is 'struct'
+  isInstance: -> @unit.name is 'instance'
   isArray: -> @unit.name is 'array'
+  isTransparent: -> @unit.transparent
 
   getName: -> @unit.name
   getNode: -> @unit.node
@@ -99,6 +108,7 @@ module.exports = class Type
   getLength: -> @unit.length
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
+  getMember: (name) -> @unit.members[name]
 
   getDeclarationName: ->
     switch @getName()
