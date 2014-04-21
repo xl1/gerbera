@@ -263,3 +263,11 @@ describe 'transform', ->
 
   it 'should convert for loop without init, test or update expressions', ->
     test 'for(;;){ break; }', 'for(;;){break;}'
+
+  it 'should convert immediate function call', ->
+    test '
+      (function f(x){ return x; })(1)
+    ', '
+      float f(float x){return x;}\
+      f(1.);
+    '

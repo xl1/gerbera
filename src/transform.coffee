@@ -154,20 +154,28 @@ module.exports =
         tid
     ]
 
-  transformCallExpression: (node) -> [
-    if node.callee.type is 'MemberExpression' and
-        node.callee.object.name in keywords and
-        op = binaryops[node.callee.property.name]
-      build type: 'binary', data: op, children: (
-        flatmap node.arguments, (x) => (@_optionalGrouping @transform) x
-      )
-    else
-      build type: 'call', children: @transform(node.callee).concat(
+  transformCallExpression: (node) ->
+    isBinary =
+      node.callee.type is 'MemberExpression' and
+      node.callee.object.name in keywords and
+      op = binaryops[node.callee.property.name]
+    if isBinary
+      return [
+        build type: 'binary', data: op, children: (
+          flatmap node.arguments, (x) => (@_optionalGrouping @transform) x
+        )
+      ]
+    calleeNode = node.callee.glslType?.getNode()
+    callee = @transform node.callee
+    if callee.length is 0
+      callee = @transform calleeNode.id
+    [
+      build type: 'call', children: callee.concat(
         flatmap node.arguments, (x) => @transform x
-        flatmap node.callee.glslType?.getNode()?.scope.inouts or [], (x) =>
+        flatmap calleeNode?.scope.inouts or [], (x) =>
           @transformIdentifier name: x
       )
-  ]
+    ]
 
   transformFunctionDeclaration: (node) -> @_appendToRoot [
     build type: 'stmt', children: [
