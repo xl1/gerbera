@@ -29,11 +29,10 @@ module.exports =
       name: 'main'
     # attributes, uniforms, varyings の型は root scope に与える
     scope = new (inferrer.Scope)
-    for param, i in params
-      scope.set mainFuncExpr.params[i].name,
-        new Type 'instance',
-          of: new Type('struct', members: param.value)
-          transparent: true
+    for { name }, i in mainFuncExpr.params
+      scope.set name, new Type 'instance',
+        of: new Type('struct', members: params[i].value)
+        transparent: true
     # 引数はなかったことにする
     mainFuncExpr.params = []
 
