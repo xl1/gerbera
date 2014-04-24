@@ -6,19 +6,20 @@ Type = require './glsltype'
 
 
 module.exports =
-  compileShader: ({ attributes, uniforms, varyings, vertex, fragment }) ->
+  compileShader: ({ attributes, uniforms, varyings, vertex, fragment, minify }) ->
+    minify ?= true
     vertex: @_compileShaderSource vertex, [
       { kind: 'attribute', value: attributes }
       { kind: 'uniform', value: uniforms }
       { kind: 'varying', value: varyings }
-    ]
+    ], { minify }
     fragment: @_compileShaderSource fragment, [
       { kind: 'uniform', value: uniforms }
       { kind: 'varying', value: varyings }
-    ]
+    ], { minify }
 
 
-  _compileShaderSource: (source, params) ->
+  _compileShaderSource: (source, params, option) ->
     ast = esprima.parse "(#{source})();"
     if not mainFuncExpr = ast.body[0].expression.callee
       throw new Error 'Shader source should be a function expression'
@@ -52,7 +53,7 @@ module.exports =
         )
 
     result = ''
-    stream = deparser(false).on('data', (r) -> result += r)
+    stream = deparser(!option.minify).on('data', (r) -> result += r)
     for stmt in preamble
       stmt.parent = program
       stream.write stmt
