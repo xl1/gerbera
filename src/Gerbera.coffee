@@ -78,3 +78,5 @@ module.exports =
   mat3: new Type 'mat3'
   mat4: new Type 'mat4'
   array: (t) -> new Type 'array', of: t
+  sampler2D: new Type 'sampler2d'
+  samplerCube: new Type 'samplerCube'
