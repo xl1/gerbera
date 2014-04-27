@@ -20,6 +20,7 @@ class TypeUnit
         @of = param.of
         @transparent = !!param.transparent
       when 'struct'
+        @typeName = param.typeName
         @members = param.members
 
   uniteFunction: (t) ->
@@ -108,6 +109,7 @@ module.exports = class Type
   getLength: -> @unit.length
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
+  getTypeName: -> @unit.typeName
   getMember: (name) -> @unit.members[name]
 
   getDeclarationName: ->
