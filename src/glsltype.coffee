@@ -24,21 +24,26 @@ class TypeUnit
         @members = param.members or {}
 
   uniteFunction: (t) ->
-    t = @uniteConstructor t
-    t.returns = @returns.unite t.returns
-    t
+    new TypeUnit 'function',
+      arguments: @_uniteArguments t
+      node: @node or t.node
+      returns: @returns.unite t.returns
 
   uniteConstructor: (t) ->
-    args =
-      if args1 = @arguments
-        if args2 = t.arguments
-          if args1.length - args2.length
-            throw new Error 'Type contradiction'
-          x.unite(args2[i]) for x, i in args1
-        args1
-      else
-        t.arguments
-    new TypeUnit 'function', arguments: args, node: @node or t.node
+    new TypeUnit 'constructor',
+      arguments: @_uniteArguments t
+      node: @node or t.node
+      of: if @of then @of.unite(t.of) else t.of
+
+  _uniteArguments: (t) ->
+    if args1 = @arguments
+      if args2 = t.arguments
+        if args1.length - args2.length
+          throw new Error 'Type contradiction'
+        x.unite(args2[i]) for x, i in args1
+      args1
+    else
+      t.arguments
 
   unite: (t) ->
     return t unless @name
@@ -59,18 +64,17 @@ class TypeUnit
           return t
       when 'function'
         if t.name is 'unresolvedFunction'
-          return new TypeUnit 'function',
-            arguments: @arguments
-            returns: @returns
-            node: t.node
+          @node = t.node
+          return @
         if t.name is 'function'
           return @uniteFunction t
+        if t.name is 'constructor'
+          return t.uniteConstructor @
       when 'constructor'
         if t.name is 'unresolvedFunction'
-          return new TypeUnit 'constructor',
-            arguments: @arguments
-            node: t.node
-        if t.name is 'constructor'
+          @node = t.node
+          return @
+        if t.name is 'function' or t.name is 'constructor'
           return @uniteConstructor t
       when 'array'
         if t.name is 'array' and @length is t.length
