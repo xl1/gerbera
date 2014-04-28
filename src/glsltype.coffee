@@ -21,7 +21,7 @@ class TypeUnit
         @transparent = !!param.transparent
       when 'struct'
         @typeName = param.typeName
-        @members = param.members
+        @members = param.members or {}
 
   uniteFunction: (t) ->
     t = @uniteConstructor t
@@ -78,10 +78,19 @@ class TypeUnit
             length: @length
             of: @of.unite t.of
       when 'struct'
-        throw new Error 'Struct type cannot be united'
+        if t.name is 'struct'
+          for own name, type of t.members
+            if @members[name]
+              @members[name].unite type
+            else
+              @members[name] = type
+          @typeName or= t.typeName
+          return @
       when 'instance'
         if t.name is 'instance' and @transparent is t.transparent
-          return @
+          return new TypeUnit 'instance',
+            transparent: @transparent
+            of: @of.unite t.of
       when t.name
         return new TypeUnit t.name
     throw new Error 'Type contradiction'
