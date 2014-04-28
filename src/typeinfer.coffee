@@ -128,10 +128,27 @@ module.exports =
 
   inferNewExpression: (node, scope) ->
     argumentsTypes = node.arguments.map (c) => @infer c, scope
-    calleeName = node.callee.name
+    calleeName = node.callee.name or calleeNode.id.name
     if calleeName in keywords
       return new Type calleeName
-    throw new Error 'Not implemented'
+    calleeType = @infer node.callee, scope
+    calleeNode = calleeType.getNode()
+    if calleeType.isUnresolved()
+      calleeScope = calleeNode.scope
+      for arg, i in calleeNode.params
+        calleeScope.set arg.name, argumentsTypes[i]
+        @infer arg, calleeScope
+      thisType = new Type 'instance',
+        of: new Type('struct', typeName: calleeName)
+      calleeScope.set 'this', thisType
+      @infer calleeNode.body, calleeScope
+      calleeType.unite new Type 'constructor',
+        arguments: argumentsTypes
+        of: thisType.getOf()
+    else
+      calleeType.unite new Type 'constructor', arguments: argumentsTypes
+    scope.set calleeName, calleeType
+    thisType
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
     if object.name is 'Math'
