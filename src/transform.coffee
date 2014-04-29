@@ -329,6 +329,10 @@ module.exports =
     build type: 'stmt', children: [build type: 'continue']
   ]
 
+  transformThisExpression: -> [
+    build type: 'ident', data: 'this'
+  ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1

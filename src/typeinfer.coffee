@@ -240,3 +240,6 @@ module.exports =
   inferContinueStatement: ({ label }, scope) ->
     if label
       throw new Error 'Not supported'
+
+  inferThisExpression: (node, scope) ->
+    scope.get 'this'
