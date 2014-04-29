@@ -151,6 +151,11 @@ module.exports =
     thisType
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
+    if object.type is 'ThisExpression'
+      members = {}
+      type = members[property.name] = new Type
+      scope.set 'this', new Type('instance', of: new Type('struct', members))
+      return type
     if object.name is 'Math'
       if computed
         throw new Error 'Not supported'
