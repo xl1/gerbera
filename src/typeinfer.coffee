@@ -50,9 +50,9 @@ module.exports =
           @infer(left, scope).unite @infer(right, scope)
         else
           throw new Error 'Not implemented'
-    if left.type isnt 'Identifier'
-      throw new Error 'Not implemented'
-    scope.set left.name, type
+    if left.type is 'Identifier'
+      scope.set left.name, type
+    type
 
   inferLiteral: ({ value }) ->
     if typeof value is 'boolean'
@@ -154,7 +154,10 @@ module.exports =
     if object.type is 'ThisExpression'
       members = {}
       type = members[property.name] = new Type
-      scope.set 'this', new Type('instance', of: new Type('struct', members))
+      scope.set(
+        'this',
+        t = new Type('instance', of: new Type('struct', members: members))
+      )
       return type
     if object.name is 'Math'
       if computed
