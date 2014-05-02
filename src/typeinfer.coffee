@@ -52,8 +52,8 @@ module.exports =
           @infer(left, scope).unite @infer(right, scope)
         else
           throw new Error 'Not implemented'
-    if left.type isnt 'Identifier'
-      throw new Error 'Not implemented'
+    if left.type is 'Identifier'
+      scope.set left.name, type
     type
 
   inferLiteral: ({ value }) ->
@@ -130,12 +130,37 @@ module.exports =
 
   inferNewExpression: (node, scope) ->
     argumentsTypes = node.arguments.map (c) => @infer c, scope
-    calleeName = node.callee.name
+    calleeName = node.callee.name or calleeNode.id.name
     if calleeName in keywords
       return new Type calleeName
-    throw new Error 'Not implemented'
+    calleeType = @infer node.callee, scope
+    calleeNode = calleeType.getNode()
+    if calleeType.isUnresolved()
+      calleeScope = calleeNode.scope
+      for arg, i in calleeNode.params
+        calleeScope.set arg.name, argumentsTypes[i]
+        @infer arg, calleeScope
+      thisType = new Type 'instance',
+        of: new Type('struct', typeName: calleeName)
+      calleeScope.set 'this', thisType
+      @infer calleeNode.body, calleeScope
+      calleeType.unite new Type 'constructor',
+        arguments: argumentsTypes
+        of: thisType.getOf()
+    else
+      calleeType.unite new Type 'constructor', arguments: argumentsTypes
+    scope.set calleeName, calleeType
+    thisType
 
   inferMemberExpression: ({ object, property, computed }, scope) ->
+    if object.type is 'ThisExpression'
+      members = {}
+      type = members[property.name] = new Type
+      scope.set(
+        'this',
+        t = new Type('instance', of: new Type('struct', members: members))
+      )
+      return type
     if object.name is 'Math'
       if computed
         throw new Error 'Not supported'
@@ -242,3 +267,6 @@ module.exports =
   inferContinueStatement: ({ label }, scope) ->
     if label
       throw new Error 'Not supported'
+
+  inferThisExpression: (node, scope) ->
+    scope.get 'this'

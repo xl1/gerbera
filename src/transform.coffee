@@ -337,6 +337,10 @@ module.exports =
     build type: 'stmt', children: [build type: 'continue']
   ]
 
+  transformThisExpression: -> [
+    build type: 'ident', data: 'this'
+  ]
+
   transformPrecisionDeclaration: ({ precision, type }) -> [
     build type: 'stmt', children: [
       build type: 'precision', children: [

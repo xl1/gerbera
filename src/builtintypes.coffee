@@ -1,115 +1,32 @@
 Type = require './glsltype'
 
-array = (x) -> new Type 'array', of: x
-struct = (x) -> new Type 'struct', of: x
-ctor = (args) -> new Type 'constructor', arguments: args
-
 bool = new Type 'bool'
 int = new Type 'int'
 float = new Type 'float'
-vec2 = new Type 'vec2'
-vec3 = new Type 'vec3'
 vec4 = new Type 'vec4'
-mat3 = new Type 'mat3'
-mat4 = new Type 'mat4'
 
 builtintypes =
   gl_Position: vec4
   gl_PointSize: float
-  gl_ClipVertex: vec4
   gl_FragCoord: vec4
   gl_FrontFacing: bool
+  gl_PointCoord: int
   gl_FragColor: vec4
-  gl_FragData: array vec4
-  gl_FragDepth: float
-  gl_Color: vec4
-  gl_SecondaryColor: vec4
-  gl_Normal: vec3
-  gl_Vertex: vec4
-  gl_MultiTexCoord0: vec4
-  gl_MultiTexCoord1: vec4
-  gl_MultiTexCoord2: vec4
-  gl_MultiTexCoord3: vec4
-  gl_MultiTexCoord4: vec4
-  gl_MultiTexCoord5: vec4
-  gl_MultiTexCoord6: vec4
-  gl_MultiTexCoord7: vec4
-  gl_FogCoord: float
-  gl_MaxLights: int
-  gl_MaxClipPlanes: int
-  gl_MaxTextureUnits: int
-  gl_MaxTextureCoords: int
+  gl_FragData: new Type 'array', of: vec4
   gl_MaxVertexAttribs: int
-  gl_MaxVertexUniformComponents: int
-  gl_MaxVaryingFloats: int
+  gl_MaxVertexUniformVectors: int
+  gl_MaxVaryingVectors: int
   gl_MaxVertexTextureImageUnits: int
   gl_MaxCombinedTextureImageUnits: int
   gl_MaxTextureImageUnits: int
-  gl_MaxFragmentUniformComponents: int
+  gl_MaxFragmentUniformVectors: int
   gl_MaxDrawBuffers: int
-  gl_ModelViewMatrix: mat4
-  gl_ProjectionMatrix: mat4
-  gl_ModelViewProjectionMatrix: mat4
-  gl_TextureMatrix: array mat4
-  gl_NormalMatrix: mat3
-  gl_ModelViewMatrixInverse: mat4
-  gl_ProjectionMatrixInverse: mat4
-  gl_ModelViewProjectionMatrixInverse: mat4
-  gl_TextureMatrixInverse: array mat4
-  gl_ModelViewMatrixTranspose: mat4
-  gl_ProjectionMatrixTranspose: mat4
-  gl_ModelViewProjectionMatrixTranspose: mat4
-  gl_TextureMatrixTranspose: array mat4
-  gl_ModelViewMatrixInverseTranspose: mat4
-  gl_ProjectionMatrixInverseTranspose: mat4
-  gl_ModelViewProjectionMatrixInverseTranspose: mat4
-  gl_TextureMatrixInverseTranspose: array mat4
-  gl_NormalScale: float
-  gl_DepthRangeParameters: ctor [float, float, float]
-  gl_ClipPlane: array vec4
-  gl_PointParameters: ctor [
-    float, float, float, float, float, float, float
-  ]
-  gl_MaterialParameters: ctor [vec4, vec4, vec4, vec4, float]
-  gl_LightSourceParameters: ctor [
-    vec4, vec4, vec4, vec4, vec4,
-    vec3, float, float, float, float, float, float
-  ]
-  gl_LightModelParameters: ctor [vec4]
-  gl_LightModelProducts: ctor [vec4]
-  gl_LightProducts: ctor [vec4, vec4, vec4]
-  gl_FogParameters: ctor [vec4, float, float, float, float]
-  gl_TextureEnvColor: array vec4
-  gl_EyePlaneS: array vec4
-  gl_EyePlaneT: array vec4
-  gl_EyePlaneR: array vec4
-  gl_EyePlaneQ: array vec4
-  gl_ObjectPlaneS: array vec4
-  gl_ObjectPlaneT: array vec4
-  gl_ObjectPlaneR: array vec4
-  gl_ObjectPlaneQ: array vec4
-  gl_FrontColor: vec4
-  gl_BackColor: vec4
-  gl_FrontSecondaryColor: vec4
-  gl_BackSecondaryColor: vec4
-  gl_TexCoord: array vec4
-  gl_FogFragCoord: float
-  gl_PointCoord: vec2
-
-extend =
-  gl_DepthRange: struct builtintypes.gl_DepthRangeParameters
-  gl_Point: struct builtintypes.gl_PointParameters
-  gl_FrontMaterial: struct builtintypes.gl_MaterialParameters
-  gl_BackMaterial: struct builtintypes.gl_MaterialParameters
-  gl_LightSource: array struct builtintypes.gl_LightSourceParameters
-  gl_LightModel: struct builtintypes.gl_LightSourceParameters
-  gl_FrontLightModelProduct: struct builtintypes.gl_LightModelProducts
-  gl_BackLightModelProduct: struct builtintypes.gl_LightModelProducts
-  gl_FrontLightProduct: struct builtintypes.gl_LightProducts
-  gl_BackLightProduct: struct builtintypes.gl_LightProducts
-  gl_Fog: struct builtintypes.gl_FogParameters
-
-for p in Object.keys extend
-  builtintypes[p] = extend[p]
+  gl_DepthRangeParameters: new Type 'struct',
+    members:
+      near: float
+      far: float
+      diff: float
+builtintypes.gl_DepthRange = new Type 'instance',
+  of: builtintypes.gl_DepthRangeParameters
 
 module.exports = builtintypes

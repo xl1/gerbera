@@ -11,33 +11,38 @@ class TypeUnit
       when 'constructor'
         @arguments = param.arguments or []
         @node = param.node
+        @of = param.of
       when 'array'
         @of = param.of
         @length = param.length
       when 'instance'
-        if param.of.getName() isnt 'struct'
-          throw new Error 'instance.of should be a struct'
         @of = param.of
         @transparent = !!param.transparent
       when 'struct'
-        @members = param.members
+        @typeName = param.typeName
+        @members = param.members or {}
 
   uniteFunction: (t) ->
-    t = @uniteConstructor t
-    t.returns = @returns.unite t.returns
-    t
+    new TypeUnit 'function',
+      arguments: @_uniteArguments t
+      node: @node or t.node
+      returns: @returns.unite t.returns
 
   uniteConstructor: (t) ->
-    args =
-      if args1 = @arguments
-        if args2 = t.arguments
-          if args1.length - args2.length
-            throw new Error 'Type contradiction'
-          x.unite(args2[i]) for x, i in args1
-        args1
-      else
-        t.arguments
-    new TypeUnit 'function', arguments: args, node: @node or t.node
+    new TypeUnit 'constructor',
+      arguments: @_uniteArguments t
+      node: @node or t.node
+      of: if @of then @of.unite(t.of) else t.of
+
+  _uniteArguments: (t) ->
+    if args1 = @arguments
+      if args2 = t.arguments
+        if args1.length - args2.length
+          throw new Error 'Type contradiction'
+        x.unite(args2[i]) for x, i in args1
+      args1
+    else
+      t.arguments
 
   unite: (t) ->
     return t unless @name
@@ -58,18 +63,17 @@ class TypeUnit
           return t
       when 'function'
         if t.name is 'unresolvedFunction'
-          return new TypeUnit 'function',
-            arguments: @arguments
-            returns: @returns
-            node: t.node
+          @node = t.node
+          return @
         if t.name is 'function'
           return @uniteFunction t
+        if t.name is 'constructor'
+          return t.uniteConstructor @
       when 'constructor'
         if t.name is 'unresolvedFunction'
-          return new TypeUnit 'constructor',
-            arguments: @arguments
-            node: t.node
-        if t.name is 'constructor'
+          @node = t.node
+          return @
+        if t.name is 'function' or t.name is 'constructor'
           return @uniteConstructor t
       when 'array'
         if t.name is 'array' and @length is t.length
@@ -77,10 +81,19 @@ class TypeUnit
             length: @length
             of: @of.unite t.of
       when 'struct'
-        throw new Error 'Struct type cannot be united'
+        if t.name is 'struct'
+          for own name, type of t.members
+            if @members[name]
+              @members[name].unite type
+            else
+              @members[name] = type
+          @typeName or= t.typeName
+          return @
       when 'instance'
         if t.name is 'instance' and @transparent is t.transparent
-          return @
+          return new TypeUnit 'instance',
+            transparent: @transparent
+            of: @of.unite t.of
       when t.name
         return new TypeUnit t.name
     throw new Error 'Type contradiction'
@@ -108,6 +121,7 @@ module.exports = class Type
   getLength: -> @unit.length
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
+  getTypeName: -> @unit.typeName
   getMember: (name) -> @unit.members[name]
 
   getDeclarationName: ->
