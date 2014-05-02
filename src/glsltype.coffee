@@ -11,12 +11,11 @@ class TypeUnit
       when 'constructor'
         @arguments = param.arguments or []
         @node = param.node
+        @of = param.of
       when 'array'
         @of = param.of
         @length = param.length
       when 'instance'
-        if param.of.getName() isnt 'struct'
-          throw new Error 'instance.of should be a struct'
         @of = param.of
         @transparent = !!param.transparent
       when 'struct'
