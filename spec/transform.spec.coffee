@@ -271,3 +271,21 @@ describe 'transform', ->
       float f(float x){return x;}\
       f(1.);
     '
+
+  it 'should convert constructor functions', ->
+    test '
+      function A(x){
+        this.hoge = x;
+      }
+      var a = new A(3);
+      var b = new A(-3);
+    ', '
+      struct __A{float hoge;};\
+      __A A(float x){\
+        __A this=__A(0.);\
+        this.hoge=x;\
+        return this;\
+      }\
+      __A a=A(3.);\
+      __A b=A(-3.);
+    '
