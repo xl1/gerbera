@@ -177,40 +177,68 @@ module.exports =
       )
     ]
 
-  transformFunctionDeclaration: (node) -> @_appendToRoot [
-    build type: 'stmt', children: [
-      build type: 'decl', children: [
-        build type: 'placeholder'
-        build type: 'placeholder'
-        build type: 'placeholder'
-        build type: 'placeholder'
-        @_transformType(node.scope.parent.get(node.id.name).getReturns())[0]
-        build type: 'function', children: @transform(node.id).concat([
-          build type: 'functionargs', children: node.params.map((x) =>
-            build type: 'decl', children: [
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'placeholder'
-              @_transformType(x.glslType)[0]
-              build type: 'decllist', children: @transform x
+  transformFunctionDeclaration: (node) ->
+    type = node.scope.parent.get node.id.name
+    body = @transform(node.body)[0]
+    if type.isConstructor()
+      @_transformStructDeclaration type.getOf()
+      # __T this = T(...);
+      pre = build type: 'stmt', children: [
+        build type: 'decl', children: [
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          @_transformType(type)[0]
+          build type: 'decllist', children:
+            @transformThisExpression().concat [
+              build type: 'expr', children:
+                @_defaultValue new Type('instance', of: type.getOf())
             ]
-          ).concat node.scope.inouts.map((sym) =>
-            build type: 'decl', children: [
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'keyword', data: 'inout'
-              build type: 'placeholder'
-              @_transformType(node.scope.get sym)[0]
-              build type: 'decllist', children: [
-                build type: 'ident', data: sym
+        ]
+      ]
+      body.children.unshift pre
+      pre.parent = body
+      # return this;
+      post = build type: 'stmt', children: [
+        build type: 'return', children: @transformThisExpression()
+      ]
+      body.children.push post
+      post.parent = body
+    @_appendToRoot [
+      build type: 'stmt', children: [
+        build type: 'decl', children: [
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          @_transformType(type)[0]
+          build type: 'function', children: @transform(node.id).concat([
+            build type: 'functionargs', children: node.params.map((x) =>
+              build type: 'decl', children: [
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'placeholder'
+                @_transformType(x.glslType)[0]
+                build type: 'decllist', children: @transform x
               ]
-            ]
-          )
-        ], @transform node.body)
+            ).concat node.scope.inouts.map((sym) =>
+              build type: 'decl', children: [
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'keyword', data: 'inout'
+                build type: 'placeholder'
+                @_transformType(node.scope.get sym)[0]
+                build type: 'decllist', children: [
+                  build type: 'ident', data: sym
+                ]
+              ]
+            )
+          ], [body])
+        ]
       ]
     ]
-  ]
 
   _transformStructDeclaration: (type) -> @_appendToRoot [
     build type: 'stmt', children: [
