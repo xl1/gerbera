@@ -149,6 +149,7 @@ module.exports =
         of: thisType.getOf()
     else
       calleeType.unite new Type 'constructor', arguments: argumentsTypes
+      thisType = new Type 'instance', of: calleeType.getOf()
     scope.set calleeName, calleeType
     thisType
 
