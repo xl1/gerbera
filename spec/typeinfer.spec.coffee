@@ -42,5 +42,5 @@ describe 'typeinfer', ->
       expect(Atype.getName()).toBe 'constructor'
       expect(atype.getName()).toBe 'instance'
       expect(atype.getOf().getName()).toBe 'struct'
-      expect(atype.getOf().getTypeName()).toBe 'A'
+      expect(atype.getOf().getTypeName()).toBe '__A'
       expect(atype.getOf().getMember('hoge').getName()).toBe 'float'
