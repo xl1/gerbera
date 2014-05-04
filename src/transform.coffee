@@ -212,6 +212,38 @@ module.exports =
     ]
   ]
 
+  _transformStructDeclaration: (type) -> @_appendToRoot [
+    build type: 'stmt', children: [
+      build type: 'decl', children: [
+        build type: 'struct', children: [].concat(
+          @_transformType type
+          for { name, type: memberType } in type.getAllMembers()
+            build type: 'decl', children: [
+              build type: 'placeholder'
+              build type: 'placeholder'
+              build type: 'placeholder'
+              build type: 'placeholder'
+            ].concat(
+              @_transformType memberType
+              [
+                build type: 'decllist', children:
+                  if memberType.isArray()
+                    @transformIdentifier({ name }).concat [
+                      build type: 'quantifier', children: [
+                        build type: 'expr', children: [
+                          build type: 'literal', data: memberType.getLength()
+                        ]
+                      ]
+                    ]
+                  else
+                    @transformIdentifier { name }
+              ]
+            )
+        )
+      ]
+    ]
+  ]
+
   transformFunctionExpression: (node) ->
     @transformFunctionDeclaration node
 
