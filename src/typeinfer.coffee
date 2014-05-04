@@ -156,10 +156,8 @@ module.exports =
     if object.type is 'ThisExpression'
       members = {}
       type = members[property.name] = new Type
-      scope.set(
-        'this',
-        t = new Type('instance', of: new Type('struct', members: members))
-      )
+      @infer(object, scope).unite new Type 'instance',
+        of: new Type('struct', members: members)
       return type
     if object.name is 'Math'
       if computed
