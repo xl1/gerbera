@@ -396,6 +396,30 @@ module.exports =
     ]
   ]
 
+  _defaultValue: (type) ->
+    switch type.getName()
+      when 'bool'
+        @transformLiteral value: false, glslType: type
+      when 'number', 'float', 'int'
+        @transformLiteral value: 0, glslType: type
+      when 'array'
+        throw new Error 'Array initializer is not supported'
+      when 'instance'
+        [
+          build type: 'call', children: @_transformType(type).concat(
+            flatmap type.getOf().getAllMembers(), (member) =>
+              @_defaultValue member.type
+          )
+        ]
+      when 'sampler2D', 'samplerCube'
+        throw new Error 'Not implemented'
+      else
+        [
+          build type: 'call', children: @_transformType(type).concat(
+            @transformLiteral value: 0, glslType: new Type 'float'
+          )
+        ]
+
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node
     if children.length isnt 1
