@@ -123,6 +123,9 @@ module.exports = class Type
   getArguments: -> @unit.arguments
   getTypeName: -> @unit.typeName
   getMember: (name) -> @unit.members[name]
+  getAllMembers: ->
+    for name in Object.keys(@unit.members).sort()
+      { name, type: @getMember name }
 
   getDeclarationName: ->
     switch @getName()
