@@ -131,8 +131,14 @@ module.exports = class Type
     switch @getName()
       when 'number'
         'float'
+      when 'struct'
+        @getTypeName()
+      when 'instance', 'constructor'
+        @getOf().getDeclarationName()
       when 'array'
         @getOf().getDeclarationName()
+      when 'function'
+        @getReturns().getDeclarationName()
       when 'unresolvedFunction', ''
         null
       else
