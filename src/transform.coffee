@@ -101,16 +101,7 @@ module.exports =
         return @transform decl.init
       stmts = [
         build type: 'stmt', children: [
-          build type: 'decl', children: [
-            build type: 'placeholder'
-            if kind is 'const'
-              build type: 'keyword', data: 'const'
-            else
-              build type: 'placeholder'
-            build type: 'placeholder'
-            build type: 'placeholder'
-          ].concat(
-            @_transformType type
+          @_buildDeclaration type: type, kind: kind, children: (
             if type.isArray()
               [
                 build type: 'decllist', children: @transform(decl.id).concat [
@@ -184,12 +175,7 @@ module.exports =
       @_transformStructDeclaration type.getOf()
       # __T this = T(...);
       pre = build type: 'stmt', children: [
-        build type: 'decl', children: [
-          build type: 'placeholder'
-          build type: 'placeholder'
-          build type: 'placeholder'
-          build type: 'placeholder'
-          @_transformType(type)[0]
+        @_buildDeclaration type: type, children: [
           build type: 'decllist', children:
             @transformThisExpression().concat [
               build type: 'expr', children:
@@ -207,38 +193,41 @@ module.exports =
       post.parent = body
     @_appendToRoot [
       build type: 'stmt', children: [
-        build type: 'decl', children: [
-          build type: 'placeholder'
-          build type: 'placeholder'
-          build type: 'placeholder'
-          build type: 'placeholder'
-          @_transformType(type)[0]
+        @_buildDeclaration type: type, children: [
           build type: 'function', children: @transform(node.id).concat([
             build type: 'functionargs', children: node.params.map((x) =>
-              build type: 'decl', children: [
-                build type: 'placeholder'
-                build type: 'placeholder'
-                build type: 'placeholder'
-                build type: 'placeholder'
-                @_transformType(x.glslType)[0]
+              @_buildDeclaration type: x.glslType, children: [
                 build type: 'decllist', children: @transform x
               ]
             ).concat node.scope.inouts.map((sym) =>
-              build type: 'decl', children: [
-                build type: 'placeholder'
-                build type: 'placeholder'
-                build type: 'keyword', data: 'inout'
-                build type: 'placeholder'
-                @_transformType(node.scope.get sym)[0]
-                build type: 'decllist', children: [
-                  build type: 'ident', data: sym
+              @_buildDeclaration(
+                inout: true
+                type: node.scope.get(sym)
+                children: [
+                  build type: 'decllist', children: [
+                    build type: 'ident', data: sym
+                  ]
                 ]
-              ]
+              )
             )
           ], [body])
         ]
       ]
     ]
+
+  _buildDeclaration: ({ kind, inout, type, children }) ->
+    build type: 'decl', children: [
+      build type: 'placeholder'
+      if kind and kind isnt 'var'
+        build type: 'keyword', data: kind
+      else
+        build type: 'placeholder'
+      if inout
+        build type: 'keyword', data: 'inout'
+      else
+        build type: 'placeholder'
+      build type: 'placeholder'
+    ].concat(@_transformType(type), children)
 
   _transformStructDeclaration: (type) -> @_appendToRoot [
     build type: 'stmt', children: [
@@ -246,27 +235,19 @@ module.exports =
         build type: 'struct', children: [].concat(
           @_transformType type
           for { name, type: memberType } in type.getAllMembers()
-            build type: 'decl', children: [
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'placeholder'
-            ].concat(
-              @_transformType memberType
-              [
-                build type: 'decllist', children:
-                  if memberType.isArray()
-                    @transformIdentifier({ name }).concat [
-                      build type: 'quantifier', children: [
-                        build type: 'expr', children: [
-                          build type: 'literal', data: memberType.getLength()
-                        ]
+            @_buildDeclaration type: memberType, children: [
+              build type: 'decllist', children:
+                if memberType.isArray()
+                  @transformIdentifier({ name }).concat [
+                    build type: 'quantifier', children: [
+                      build type: 'expr', children: [
+                        build type: 'literal', data: memberType.getLength()
                       ]
                     ]
-                  else
-                    @transformIdentifier { name }
-              ]
-            )
+                  ]
+                else
+                  @transformIdentifier { name }
+            ]
         )
       ]
     ]
@@ -411,12 +392,7 @@ module.exports =
 
   transformExternalDeclaration: ({ name, kind, type }) -> [
     build type: 'stmt', children: [
-      build type: 'decl', children: [
-        build type: 'placeholder'
-        build type: 'keyword', data: kind
-        build type: 'placeholder'
-        build type: 'placeholder'
-        @_transformType(type)[0]
+      @_buildDeclaration kind: kind, type: type, children: [
         build type: 'decllist', children: [
           build type: 'ident', data: name
         ]
