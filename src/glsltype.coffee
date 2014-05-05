@@ -123,13 +123,22 @@ module.exports = class Type
   getArguments: -> @unit.arguments
   getTypeName: -> @unit.typeName
   getMember: (name) -> @unit.members[name]
+  getAllMembers: ->
+    for name in Object.keys(@unit.members).sort()
+      { name, type: @getMember name }
 
   getDeclarationName: ->
     switch @getName()
       when 'number'
         'float'
+      when 'struct'
+        @getTypeName()
+      when 'instance', 'constructor'
+        @getOf().getDeclarationName()
       when 'array'
         @getOf().getDeclarationName()
+      when 'function'
+        @getReturns().getDeclarationName()
       when 'unresolvedFunction', ''
         null
       else

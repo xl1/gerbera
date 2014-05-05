@@ -177,37 +177,97 @@ module.exports =
       )
     ]
 
-  transformFunctionDeclaration: (node) -> @_appendToRoot [
+  transformFunctionDeclaration: (node) ->
+    type = node.scope.parent.get node.id.name
+    body = @transform(node.body)[0]
+    if type.isConstructor()
+      @_transformStructDeclaration type.getOf()
+      # __T this = T(...);
+      pre = build type: 'stmt', children: [
+        build type: 'decl', children: [
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          @_transformType(type)[0]
+          build type: 'decllist', children:
+            @transformThisExpression().concat [
+              build type: 'expr', children:
+                @_defaultValue new Type('instance', of: type.getOf())
+            ]
+        ]
+      ]
+      body.children.unshift pre
+      pre.parent = body
+      # return this;
+      post = build type: 'stmt', children: [
+        build type: 'return', children: @transformThisExpression()
+      ]
+      body.children.push post
+      post.parent = body
+    @_appendToRoot [
+      build type: 'stmt', children: [
+        build type: 'decl', children: [
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          build type: 'placeholder'
+          @_transformType(type)[0]
+          build type: 'function', children: @transform(node.id).concat([
+            build type: 'functionargs', children: node.params.map((x) =>
+              build type: 'decl', children: [
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'placeholder'
+                @_transformType(x.glslType)[0]
+                build type: 'decllist', children: @transform x
+              ]
+            ).concat node.scope.inouts.map((sym) =>
+              build type: 'decl', children: [
+                build type: 'placeholder'
+                build type: 'placeholder'
+                build type: 'keyword', data: 'inout'
+                build type: 'placeholder'
+                @_transformType(node.scope.get sym)[0]
+                build type: 'decllist', children: [
+                  build type: 'ident', data: sym
+                ]
+              ]
+            )
+          ], [body])
+        ]
+      ]
+    ]
+
+  _transformStructDeclaration: (type) -> @_appendToRoot [
     build type: 'stmt', children: [
       build type: 'decl', children: [
-        build type: 'placeholder'
-        build type: 'placeholder'
-        build type: 'placeholder'
-        build type: 'placeholder'
-        @_transformType(node.scope.parent.get(node.id.name).getReturns())[0]
-        build type: 'function', children: @transform(node.id).concat([
-          build type: 'functionargs', children: node.params.map((x) =>
+        build type: 'struct', children: [].concat(
+          @_transformType type
+          for { name, type: memberType } in type.getAllMembers()
             build type: 'decl', children: [
               build type: 'placeholder'
               build type: 'placeholder'
               build type: 'placeholder'
               build type: 'placeholder'
-              @_transformType(x.glslType)[0]
-              build type: 'decllist', children: @transform x
-            ]
-          ).concat node.scope.inouts.map((sym) =>
-            build type: 'decl', children: [
-              build type: 'placeholder'
-              build type: 'placeholder'
-              build type: 'keyword', data: 'inout'
-              build type: 'placeholder'
-              @_transformType(node.scope.get sym)[0]
-              build type: 'decllist', children: [
-                build type: 'ident', data: sym
+            ].concat(
+              @_transformType memberType
+              [
+                build type: 'decllist', children:
+                  if memberType.isArray()
+                    @transformIdentifier({ name }).concat [
+                      build type: 'quantifier', children: [
+                        build type: 'expr', children: [
+                          build type: 'literal', data: memberType.getLength()
+                        ]
+                      ]
+                    ]
+                  else
+                    @transformIdentifier { name }
               ]
-            ]
-          )
-        ], @transform node.body)
+            )
+        )
       ]
     ]
   ]
@@ -363,6 +423,30 @@ module.exports =
       ]
     ]
   ]
+
+  _defaultValue: (type) ->
+    switch type.getName()
+      when 'bool'
+        @transformLiteral value: false, glslType: type
+      when 'number', 'float', 'int'
+        @transformLiteral value: 0, glslType: type
+      when 'array'
+        throw new Error 'Array initializer is not supported'
+      when 'instance'
+        [
+          build type: 'call', children: @_transformType(type).concat(
+            flatmap type.getOf().getAllMembers(), (member) =>
+              @_defaultValue member.type
+          )
+        ]
+      when 'sampler2D', 'samplerCube'
+        throw new Error 'Not implemented'
+      else
+        [
+          build type: 'call', children: @_transformType(type).concat(
+            @transformLiteral value: 0, glslType: new Type 'float'
+          )
+        ]
 
   _optionalGrouping: (f) -> (node) =>
     children = f.call @, node

@@ -17,7 +17,7 @@ class Scope
     if type = @symTable[symbol]
       return type
     if type = @parent?.get symbol
-      if symbol not in @inouts
+      if not (symbol in @inouts or type.isFunction() or type.isConstructor())
         @inouts.push symbol
       return type
     throw new Error "Undeclared symbol #{symbol}"
@@ -141,7 +141,7 @@ module.exports =
         calleeScope.set arg.name, argumentsTypes[i]
         @infer arg, calleeScope
       thisType = new Type 'instance',
-        of: new Type('struct', typeName: calleeName)
+        of: new Type('struct', typeName: '__' + calleeName)
       calleeScope.set 'this', thisType
       @infer calleeNode.body, calleeScope
       calleeType.unite new Type 'constructor',
@@ -149,6 +149,7 @@ module.exports =
         of: thisType.getOf()
     else
       calleeType.unite new Type 'constructor', arguments: argumentsTypes
+      thisType = new Type 'instance', of: calleeType.getOf()
     scope.set calleeName, calleeType
     thisType
 
@@ -156,10 +157,8 @@ module.exports =
     if object.type is 'ThisExpression'
       members = {}
       type = members[property.name] = new Type
-      scope.set(
-        'this',
-        t = new Type('instance', of: new Type('struct', members: members))
-      )
+      @infer(object, scope).unite new Type 'instance',
+        of: new Type('struct', members: members)
       return type
     if object.name is 'Math'
       if computed
