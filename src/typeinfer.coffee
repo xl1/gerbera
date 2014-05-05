@@ -141,7 +141,7 @@ module.exports =
         calleeScope.set arg.name, argumentsTypes[i]
         @infer arg, calleeScope
       thisType = new Type 'instance',
-        of: new Type('struct', typeName: '__' + calleeName)
+        of: new Type('struct', typeName: '_' + calleeName)
       calleeScope.set 'this', thisType
       @infer calleeNode.body, calleeScope
       calleeType.unite new Type 'constructor',
