@@ -379,7 +379,7 @@ module.exports =
   ]
 
   transformThisExpression: -> [
-    build type: 'ident', data: 'this'
+    build type: 'ident', data: '_this'
   ]
 
   transformPrecisionDeclaration: ({ precision, type }) -> [

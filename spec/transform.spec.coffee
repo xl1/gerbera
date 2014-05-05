@@ -280,14 +280,14 @@ describe 'transform', ->
       var a = new A(3);
       var b = new A(-3);
     ', '
-      struct __A{float hoge;};\
-      __A A(float x){\
-        __A this=__A(0.);\
-        this.hoge=x;\
-        return this;\
+      struct _A{float hoge;};\
+      _A A(float x){\
+        _A _this=_A(0.);\
+        _this.hoge=x;\
+        return _this;\
       }\
-      __A a=A(3.);\
-      __A b=A(-3.);
+      _A a=A(3.);\
+      _A b=A(-3.);
     '
 
   it 'should convert more complex class declarations', ->
@@ -299,18 +299,18 @@ describe 'transform', ->
       }
       var b = new B(1, new vec3(2));
     ', '
-      struct __A{float hoge;};\
-      __A A(float x){\
-        __A this=__A(0.);\
-        this.hoge=x;\
-        return this;\
+      struct _A{float hoge;};\
+      _A A(float x){\
+        _A _this=_A(0.);\
+        _this.hoge=x;\
+        return _this;\
       }\
-      struct __B{vec3 a;__A child;};\
-      __B B(float x,vec3 y){\
-        __B this=__B(vec3(0.),__A(0.));\
-        this.child=A(x);\
-        this.a=y;\
-        return this;\
+      struct _B{vec3 a;_A child;};\
+      _B B(float x,vec3 y){\
+        _B _this=_B(vec3(0.),_A(0.));\
+        _this.child=A(x);\
+        _this.a=y;\
+        return _this;\
       }\
-      __B b=B(1.,vec3(2.));
+      _B b=B(1.,vec3(2.));
     '
