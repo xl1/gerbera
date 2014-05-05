@@ -17,7 +17,7 @@ class Scope
     if type = @symTable[symbol]
       return type
     if type = @parent?.get symbol
-      if symbol not in @inouts
+      if not (symbol in @inouts or type.isFunction() or type.isConstructor())
         @inouts.push symbol
       return type
     throw new Error "Undeclared symbol #{symbol}"
