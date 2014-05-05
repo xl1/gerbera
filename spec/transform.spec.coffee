@@ -289,3 +289,28 @@ describe 'transform', ->
       __A a=A(3.);\
       __A b=A(-3.);
     '
+
+  it 'should convert more complex class declarations', ->
+    test '
+      function A(x){ this.hoge = x; }
+      function B(x, y){
+        this.child = new A(x);
+        this.a = y;
+      }
+      var b = new B(1, new vec3(2));
+    ', '
+      struct __A{float hoge;};\
+      __A A(float x){\
+        __A this=__A(0.);\
+        this.hoge=x;\
+        return this;\
+      }\
+      struct __B{vec3 a;__A child;};\
+      __B B(float x,vec3 y){\
+        __B this=__B(vec3(0.),__A(0.));\
+        this.child=A(x);\
+        this.a=y;\
+        return this;\
+      }\
+      __B b=B(1.,vec3(2.));
+    '
