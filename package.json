@@ -4,7 +4,8 @@
   "description": "Shaders in JavaScript",
   "scripts": {
     "build": "coffee -c src",
-    "test": "jasmine-node --coffee ."
+    "test": "jasmine-node --coffee .",
+    "browserify": "npm run build && browserify index.js > Gerbera.js"
   },
   "repository": "http://github.com/xl1/gerbera.git",
   "author": "xl1",
