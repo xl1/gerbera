@@ -1,0 +1,3 @@
+[submodule "glsl-tokenizer"]
+	path = glsl-tokenizer
+	url = https://github.com/chrisdickinson/glsl-tokenizer
