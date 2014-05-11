@@ -1,5 +1,19 @@
 language: node_js
 node_js:
-  - "0.10"
+  - '0.10'
+env:
+  global:
+    secure: kQ3YsJu5hu4VS3kPVqV07fx1pyM3OjHmNYQER3OcyB6EjK9b3Bc8W0dMzjwcAfrklCc5IyLJHe+keZsKQ+IYoHF80IYT/WzTJj8f/QYgg6acqowfm2l6XNzNqG7BnFVm9GnPLnsc/QC+BK6X7dQww0GEQ9YWpUI2PK9gcRb9snk=
 before_script:
-  - "npm install -g jasmine-node"
+  - npm install -g jasmine-node
+  - npm install -g coffee-script
+  - npm install -g browserify
+after_success:
+  - git fetch origin gh-pages:gh-pages
+  - git checkout gh-pages
+  - git checkout master -- src
+  - npm run browserify
+  - git config --global user.email "travis@travis-ci.org"
+  - git config --global user.name "travis-ci"
+  - git commit -am "update"
+  - git push --quiet https://$GH_TOKEN@github.com/xl1/gerbera.git gh-pages 2> /dev/null
