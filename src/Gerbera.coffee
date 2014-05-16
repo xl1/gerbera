@@ -5,48 +5,57 @@ transformer = require './transform'
 Type = require './glsltype'
 
 
-module.exports =
-  compileShader: ({ attributes, uniforms, varyings, vertex, fragment, minify }) ->
-    minify ?= true
-    vertex: @_compileShaderSource vertex, [
-      { kind: 'attribute', value: attributes }
-      { kind: 'uniform', value: uniforms }
-      { kind: 'varying', value: varyings }
-    ], { minify }
-    fragment: @_compileShaderSource fragment, [
-      { kind: 'uniform', value: uniforms }
-      { kind: 'varying', value: varyings }
-    ], { minify }
+class Converter
+  constructor: ({ attributes, uniforms, @vertex, @fragment, @minify }) ->
+    @_attribute = new Type 'struct', members: attributes
+    @_uniform = new Type 'struct', members: uniforms
+    @_varying = new Type 'struct'
 
+  convert: ->
+    option =
+      minify: @minify ? true
+      precision:
+        float: 'mediump'
+    vertex:
+      @_convertShader @vertex, {
+        attribute: @_attribute
+        uniform: @_uniform
+        varying: @_varying
+      }, option
+    fragment:
+      @_convertShader @fragment, {
+        uniform: @_uniform
+        varying: @_varying
+      }, option
 
-  _compileShaderSource: (source, params, option) ->
-    ast = esprima.parse "(#{source})();"
+  _convertShader: (source, param, option) ->
+    source = "(#{source})(#{Object.keys(param).sort().join()})"
+    ast = esprima.parse source
     if not mainFuncExpr = ast.body[0].expression.callee
       throw new Error 'Shader source should be a function expression'
-    # main という名前だったことにする
+    # add a function name
     mainFuncExpr.id =
       type: 'Identifier'
       name: 'main'
-    # attributes, uniforms, varyings の型は root scope に与える
+    # tell types of params
     scope = new (inferrer.Scope)
-    for { name }, i in mainFuncExpr.params
-      scope.set name, new Type 'instance',
-        of: new Type('struct', members: params[i].value)
-        transparent: true
-    # 引数はなかったことにする
-    mainFuncExpr.params = []
+    for own kind, type of param
+      scope.set kind, new Type 'instance', of: type, transparent: true
 
     inferrer.infer ast, scope
-    # params が inout としてカウントされないようにする
-    scope.children[0].inouts = []
-    # CallExpression ではなく単に function があるだけだったことにする
+    # unwrap CallExpression
     ast.body[0].expression = mainFuncExpr
 
     program = transformer.transform(ast)
-    preamble = transformer.transformPrecisionDeclaration
-      precision: 'mediump', type: @float
-    for { kind, value } in params
-      for own name, type of value
+    preamble = []
+    for own typeName, precision of option.precision ? {}
+      preamble = preamble.concat(
+        transformer.transformPrecisionDeclaration
+          precision: precision
+          type: Gerbera[typeName]
+      )
+    for own kind, paramType of param
+      for { name, type } in paramType.getAllMembers()
         preamble = preamble.concat(
           transformer.transformExternalDeclaration { name, kind, type }
         )
@@ -60,6 +69,10 @@ module.exports =
       stream.write stmt
     result
 
+
+module.exports = Gerbera =
+  compileShader: (opt) ->
+    new Converter(opt).convert()
 
   # types
   bool: new Type 'bool'
