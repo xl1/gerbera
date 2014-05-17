@@ -192,11 +192,13 @@ module.exports =
       body.children.push post
       post.parent = body
 
-    params = for x in node.params
+    params = for x in node.params when not x.glslType.isTransparent()
       @_buildDeclaration type: x.glslType, children: [
         build type: 'decllist', children: @transform x
       ]
-    inouts = for sym in node.scope.inouts
+    inouts = for sym in node.scope.inouts when (
+      not node.scope.get(sym).isTransparent()
+    )
       @_buildDeclaration(
         inout: true
         type: node.scope.get(sym)
