@@ -32,3 +32,41 @@ describe 'Gerbera', ->
           );\
         }
       '
+
+    it 'should infer types of varyings', ->
+      result = Gerbera.compileShader
+        attributes:
+          position: Gerbera.vec2
+        uniforms:
+          perspective: Gerbera.mat4
+          sampler: Gerbera.sampler2D
+        vertex: (attributes, uniforms, varyings) ->
+          pos = new vec4(attributes.position, 0, 1)
+          gl_Position = vec4.mult(uniforms.perspective, pos)
+          varyings.texCoord = attributes.position
+          return
+        fragment: (uniforms, varyings) ->
+          gl_FragColor = vec4.texture2D(uniforms.sampler, varyings.texCoord)
+          return
+      expect(result.vertex).toBe '
+        precision mediump float;\
+        attribute vec2 position;\
+        uniform mat4 perspective;\
+        uniform sampler2D sampler;\
+        varying vec2 texCoord;\
+        void main(){\
+          vec4 pos;\
+          pos=vec4(position,0.,1.);\
+          gl_Position=perspective*pos;\
+          texCoord=position;\
+        }
+      '
+      expect(result.fragment).toBe '
+        precision mediump float;\
+        uniform mat4 perspective;\
+        uniform sampler2D sampler;\
+        varying vec2 texCoord;\
+        void main(){\
+          gl_FragColor=texture2D(sampler,texCoord);\
+        }
+      '
