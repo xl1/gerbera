@@ -122,7 +122,7 @@ module.exports = class Type
   getReturns: -> @unit.returns
   getArguments: -> @unit.arguments
   getTypeName: -> @unit.typeName
-  getMember: (name) -> @unit.members[name]
+  getMember: (name) -> @unit.members[name] or= new Type
   getAllMembers: ->
     for name in Object.keys(@unit.members).sort()
       { name, type: @getMember name }

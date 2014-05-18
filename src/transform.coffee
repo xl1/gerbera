@@ -191,25 +191,29 @@ module.exports =
       ]
       body.children.push post
       post.parent = body
+
+    params = for x in node.params when not x.glslType.isTransparent()
+      @_buildDeclaration type: x.glslType, children: [
+        build type: 'decllist', children: @transform x
+      ]
+    inouts = for sym in node.scope.inouts when (
+      not node.scope.get(sym).isTransparent()
+    )
+      @_buildDeclaration(
+        inout: true
+        type: node.scope.get(sym)
+        children: [
+          build type: 'decllist', children: [
+            build type: 'ident', data: sym
+          ]
+        ]
+      )
+
     @_appendToRoot [
       build type: 'stmt', children: [
         @_buildDeclaration type: type, children: [
           build type: 'function', children: @transform(node.id).concat([
-            build type: 'functionargs', children: node.params.map((x) =>
-              @_buildDeclaration type: x.glslType, children: [
-                build type: 'decllist', children: @transform x
-              ]
-            ).concat node.scope.inouts.map((sym) =>
-              @_buildDeclaration(
-                inout: true
-                type: node.scope.get(sym)
-                children: [
-                  build type: 'decllist', children: [
-                    build type: 'ident', data: sym
-                  ]
-                ]
-              )
-            )
+            build type: 'functionargs', children: params.concat inouts
           ], [body])
         ]
       ]
