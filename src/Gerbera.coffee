@@ -28,10 +28,11 @@ class Converter
         varying: @_varying
       }, option
 
-  _convertShader: (source, param, option) ->
-    source = "(#{source})(#{Object.keys(param).sort().join()})"
-    ast = esprima.parse source
-    if not mainFuncExpr = ast.body[0].expression.callee
+  _parse: (source, param) ->
+    esprima.parse "(#{source})(#{Object.keys(param).sort().join()})"
+
+  _annotate: (jsast, param) ->
+    if not mainFuncExpr = jsast.body[0].expression.callee
       throw new Error 'Shader source should be a function expression'
     # add a function name
     mainFuncExpr.id =
@@ -41,12 +42,15 @@ class Converter
     scope = new (inferrer.Scope)
     for own kind, type of param
       scope.set kind, new Type 'instance', of: type, transparent: true
+    inferrer.infer jsast, scope
+    jsast
 
-    inferrer.infer ast, scope
+  _transform: (jsast) ->
     # unwrap CallExpression
-    ast.body[0].expression = mainFuncExpr
+    jsast.body[0].expression = jsast.body[0].expression.callee
+    transformer.transform jsast
 
-    program = transformer.transform(ast)
+  _generate: (glslast, param, option) ->
     preamble = []
     for own typeName, precision of option.precision ? {}
       preamble = preamble.concat(
@@ -63,11 +67,17 @@ class Converter
     result = ''
     stream = deparser(!option.minify).on('data', (r) -> result += r)
     for stmt in preamble
-      stmt.parent = program
+      stmt.parent = glslast
       stream.write stmt
-    for stmt in program.children
+    for stmt in glslast.children
       stream.write stmt
     result
+
+  _convertShader: (source, param, option) ->
+    jsast = @_parse source, param
+    jsast = @_annotate jsast, param
+    glslast = @_transform jsast
+    @_generate glslast, param, option
 
 
 module.exports = Gerbera =
