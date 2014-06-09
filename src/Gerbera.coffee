@@ -1,3 +1,4 @@
+flatmap = require './flatmap'
 esprima = require 'esprima'
 deparser = require 'glsl-deparser'
 inferrer = require './typeinfer'
@@ -51,25 +52,19 @@ class Converter
     transformer.transform jsast
 
   _generate: (glslast, param, option) ->
-    preamble = []
-    for own typeName, precision of option.precision ? {}
-      preamble = preamble.concat(
-        transformer.transformPrecisionDeclaration
-          precision: precision
-          type: Gerbera[typeName]
-      )
-    for own kind, paramType of param
-      for { name, type } in paramType.getAllMembers()
-        preamble = preamble.concat(
-          transformer.transformExternalDeclaration { name, kind, type }
-        )
-
     result = ''
     stream = deparser(!option.minify).on('data', (r) -> result += r)
-    for stmt in preamble
+    [].concat(
+      flatmap Object.keys(option.precision ? {}), (typeName) ->
+        transformer.transformPrecisionDeclaration
+          precision: option.precision[typeName]
+          type: Gerbera[typeName]
+      flatmap Object.keys(param), (kind) ->
+        flatmap param[kind].getAllMembers(), ({ name, type }) ->
+          transformer.transformExternalDeclaration { name, kind, type }
+      glslast.children
+    ).forEach (stmt) ->
       stmt.parent = glslast
-      stream.write stmt
-    for stmt in glslast.children
       stream.write stmt
     result
 
