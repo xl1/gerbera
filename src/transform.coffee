@@ -1,13 +1,8 @@
+flatmap = require './flatmap'
 builtins = require '../glsl-tokenizer/lib/builtins'
 keywords = require '../glsl-tokenizer/lib/literals'
 binaryops = 'add':'+', 'sub':'-', 'mult':'*', 'div':'/'
 Type = require './glsltype'
-
-
-flatmap = (ary, func) ->
-  ary.reduce (result, x) ->
-    result.concat func x
-  , []
 
 
 build = ({ type, data, children }) ->
