@@ -242,7 +242,10 @@ module.exports =
     return
 
   inferUpdateExpression: ({ operator, argument, prefix }, scope) ->
-    @infer(argument, scope).unite new Type 'int'
+    type = @infer argument, scope
+    if type.getName() is 'float'
+      return type
+    type.unite new Type 'int'
 
   inferWhileStatement: ({ test, body }, scope) ->
     @infer test, scope
