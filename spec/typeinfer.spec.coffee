@@ -44,3 +44,16 @@ describe 'typeinfer', ->
       expect(atype.getOf().getName()).toBe 'struct'
       expect(atype.getOf().getTypeName()).toBe '_A'
       expect(atype.getOf().getMember('hoge').getName()).toBe 'float'
+
+    it 'should infer update expressions', ->
+      ast = esprima.parse '''
+      var a = 42;   // number
+      var b = 3.14; // float
+      var c = a++;  // should be int
+      var d = b++;  // should be float
+      '''
+      inferrer.infer ast
+      expect(ast.scope.get('a').getName()).toBe 'int'
+      expect(ast.scope.get('b').getName()).toBe 'float'
+      expect(ast.scope.get('c').getName()).toBe 'int'
+      expect(ast.scope.get('d').getName()).toBe 'float'
