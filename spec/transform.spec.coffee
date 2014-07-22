@@ -272,6 +272,16 @@ describe 'transform', ->
       f(1.);
     '
 
+  it 'should convert anonymous function calls', ->
+    inferrer._anonymousFunctionNameIndex = 0
+    test '
+      (function(x){ return function(y){ return y; }(x); })(2);
+    ', '
+      float anonymousFunction1(float y){return y;}\
+      float anonymousFunction0(float x){return anonymousFunction1(x);}\
+      anonymousFunction0(2.);
+    '
+
   it 'should convert constructor functions', ->
     test '
       function A(x){
