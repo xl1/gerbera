@@ -272,6 +272,16 @@ describe 'transform', ->
       f(1.);
     '
 
+  it 'should convert anonymous function calls', ->
+    inferrer._anonymousFunctionNameIndex = 0
+    test '
+      (function(x){ return function(y){ return y; }(x); })(2);
+    ', '
+      float anonymousFunction1(float y){return y;}\
+      float anonymousFunction0(float x){return anonymousFunction1(x);}\
+      anonymousFunction0(2.);
+    '
+
   it 'should convert constructor functions', ->
     test '
       function A(x){
@@ -313,4 +323,18 @@ describe 'transform', ->
         return _this;\
       }\
       _B b=B(1.,vec3(2.));
+    '
+
+  it 'should convert anonymous classes', ->
+    inferrer._anonymousFunctionNameIndex = 0
+    test '
+      var foo = new function(x){ this.x = x; }(1);
+    ', '
+      struct _anonymousFunction0{float x;};\
+      _anonymousFunction0 anonymousFunction0(float x){\
+        _anonymousFunction0 _this=_anonymousFunction0(0.);\
+        _this.x=x;\
+        return _this;\
+      }\
+      _anonymousFunction0 foo=anonymousFunction0(1.);
     '
