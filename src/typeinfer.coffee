@@ -28,9 +28,9 @@ class Scope
 module.exports =
   Scope: Scope
 
-  createAnonymousFunctionName: do ->
-    i = 0
-    -> "anonymousFunction#{i++}"
+  _anonymousFunctionNameIndex: 0
+  createAnonymousFunctionName: ->
+    "anonymousFunction#{@_anonymousFunctionNameIndex++}"
 
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
