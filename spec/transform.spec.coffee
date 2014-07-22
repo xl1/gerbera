@@ -316,14 +316,15 @@ describe 'transform', ->
     '
 
   it 'should convert anonymous classes', ->
+    inferrer._anonymousFunctionNameIndex = 0
     test '
       var foo = new function(x){ this.x = x; }(1);
     ', '
-      struct _anonymousFunction5{float x;};\
-      _anonymousFunction5 anonymousFunction5(float x){\
-        _anonymousFunction5 _this=_anonymousFunction5(0.);\
+      struct _anonymousFunction0{float x;};\
+      _anonymousFunction0 anonymousFunction0(float x){\
+        _anonymousFunction0 _this=_anonymousFunction0(0.);\
         _this.x=x;\
         return _this;\
       }\
-      _anonymousFunction5 foo=anonymousFunction5(1.);
+      _anonymousFunction0 foo=anonymousFunction0(1.);
     '
