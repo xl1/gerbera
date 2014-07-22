@@ -314,3 +314,16 @@ describe 'transform', ->
       }\
       _B b=B(1.,vec3(2.));
     '
+
+  it 'should convert anonymous classes', ->
+    test '
+      var foo = new function(x){ this.x = x; }(1);
+    ', '
+      struct _anonymousFunction5{float x;};\
+      _anonymousFunction5 anonymousFunction5(float x){\
+        _anonymousFunction5 _this=_anonymousFunction5(0.);\
+        _this.x=x;\
+        return _this;\
+      }\
+      _anonymousFunction5 foo=anonymousFunction5(1.);
+    '
