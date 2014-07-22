@@ -30,7 +30,7 @@ module.exports =
 
   createAnonymousFunctionName: do ->
     i = 0
-    -> "anonymousFuncion#{i++}"
+    -> "anonymousFunction#{i++}"
 
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
