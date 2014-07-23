@@ -28,9 +28,9 @@ class Scope
 module.exports =
   Scope: Scope
 
-  createAnonymousFunctionName: do ->
-    i = 0
-    -> "anonymousFuncion#{i++}"
+  _anonymousFunctionNameIndex: 0
+  createAnonymousFunctionName: ->
+    "anonymousFunction#{@_anonymousFunctionNameIndex++}"
 
   infer: (node, scope) ->
     if f = @["infer#{node.type}"]
@@ -130,11 +130,12 @@ module.exports =
 
   inferNewExpression: (node, scope) ->
     argumentsTypes = node.arguments.map (c) => @infer c, scope
-    calleeName = node.callee.name or calleeNode.id.name
+    calleeName = node.callee.name
     if calleeName in keywords
       return new Type calleeName
     calleeType = @infer node.callee, scope
     calleeNode = calleeType.getNode()
+    calleeName or= calleeNode.id.name
     if calleeType.isUnresolved()
       calleeScope = calleeNode.scope
       for arg, i in calleeNode.params
