@@ -6,8 +6,8 @@ builtintypes = require './builtintypes'
 
 class Scope
   constructor: (@parent) ->
-    if parent
-      parent.children.push @
+    if @parent
+      @parent.children.push @
     @children = []
     @symTable = {}
     @inouts = []
@@ -63,7 +63,7 @@ module.exports =
 
   inferIdentifier: ({ name }, scope) ->
     if name in builtins then builtintypes[name] else scope.get name
-  
+
   inferBlockStatement: ({ body }, scope) ->
     for child in body
       @infer child, scope
