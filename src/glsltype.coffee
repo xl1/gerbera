@@ -1,7 +1,7 @@
 class TypeUnit
   constructor: (@name, param={}) ->
     @holders = []
-    switch name
+    switch @name
       when 'function'
         @arguments = param.arguments
         @returns = param.returns or new Type
@@ -104,7 +104,7 @@ module.exports = class Type
     @append new TypeUnit(name, param)
 
   append: (@unit) ->
-    unit.holders.push @
+    @unit.holders.push @
 
   isUndef: -> not @unit.name
   isUnresolved: -> @unit.name is 'unresolvedFunction'
