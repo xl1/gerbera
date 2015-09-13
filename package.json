@@ -7,15 +7,26 @@
     "test": "jasmine-node --coffee .",
     "browserify": "npm run build && browserify index.js > Gerbera.js"
   },
-  "repository": "http://github.com/xl1/gerbera.git",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/xl1/gerbera.git"
+  },
   "author": "xl1",
   "license": "MIT",
   "dependencies": {
-    "esprima": "~1.0.4",
-    "glsl-deparser": "0.0.2"
+    "esprima": "^2.6.0",
+    "glsl-deparser": "^1.0.0"
   },
   "devDependencies": {
-    "glsl-parser": "0.0.5",
-    "glsl-tokenizer": "0.0.8"
-  }
+    "coffee-script": "^1.10.0",
+    "jasmine-node": "^1.14.5",
+    "browserify": "^11.1.0",
+    "glsl-parser": "^2.0.0",
+    "glsl-tokenizer": "^2.0.2"
+  },
+  "bugs": {
+    "url": "https://github.com/xl1/gerbera/issues"
+  },
+  "homepage": "https://github.com/xl1/gerbera#readme",
+  "main": "index.js"
 }
